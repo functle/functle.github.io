@@ -22,3 +22,12 @@ export function archiveUrlForDate(href: string, dateKey: string): string {
   url.searchParams.set('date', dateKey);
   return `${url.pathname}${url.search}${url.hash}`;
 }
+
+/** Move by a local calendar day, staying inside the available archive. */
+export function adjacentArchiveDate(value: string, direction: -1 | 1, when: Date = new Date()): string | null {
+  const date = parseArchiveDate(value, when);
+  if (!date) return null;
+  date.setDate(date.getDate() + direction);
+  const adjacent = dateKey(date);
+  return parseArchiveDate(adjacent, when) ? adjacent : null;
+}

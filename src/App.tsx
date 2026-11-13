@@ -22,10 +22,11 @@ interface AppProps {
   /** Also use this as the React key to reset game state when switching puzzles. */
   storageKey: string;
   dateLabel?: string;
+  puzzleNavigation?: ReactNode;
   rulesAction?: ReactNode;
 }
 
-export default function App({ puzzle, storageKey, dateLabel, rulesAction }: AppProps) {
+export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, rulesAction }: AppProps) {
   const [guesses, setGuesses] = useState<Guess[]>(() =>
     loadDay(storageKey, puzzle.dateKey)
   );
@@ -141,6 +142,8 @@ export default function App({ puzzle, storageKey, dateLabel, rulesAction }: AppP
           )}
         </>
       )}
+
+      {puzzleNavigation}
 
       <footer className="game-footer">
         <details className="rules">

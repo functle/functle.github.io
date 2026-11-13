@@ -472,6 +472,32 @@ body {
   color: var(--ink-soft);
 }
 
+.archive-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--step) * 2);
+  margin-top: calc(var(--step) * 2);
+}
+
+.archive-navigation button {
+  min-height: 2.75rem;
+  padding: var(--step) calc(var(--step) * 2);
+  font-family: var(--font-text);
+  font-size: 0.875rem;
+  color: var(--plot);
+  background: var(--stock);
+  border: 1px solid var(--grid);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.archive-navigation button:disabled {
+  color: var(--ink-soft);
+  background: var(--paper);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ---- Rules ------------------------------------------------------------- */
 
 .game-footer {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archiveDateRange, archiveUrlForDate, parseArchiveDate } from './archive';
+import { adjacentArchiveDate, archiveDateRange, archiveUrlForDate, parseArchiveDate } from './archive';
 import { dateKey, puzzleFor } from './puzzle';
 
 const today = new Date(2026, 10, 13, 0, 15);
@@ -57,5 +57,32 @@ describe('archive URLs', () => {
   it('replaces repeated date parameters with a single selected date', () => {
     expect(archiveUrlForDate('https://example.com/archive?date=bad&date=2026-11-11', '2026-11-12'))
       .toBe('/archive?date=2026-11-12');
+  });
+});
+
+describe('archive navigation', () => {
+  it('stops at the first puzzle and yesterday', () => {
+    expect(adjacentArchiveDate('2026-09-01', -1, today)).toBeNull();
+    expect(adjacentArchiveDate('2026-09-01', 1, today)).toBe('2026-09-02');
+    expect(adjacentArchiveDate('2026-11-12', 1, today)).toBeNull();
+    expect(adjacentArchiveDate('2026-11-12', -1, today)).toBe('2026-11-11');
+  });
+
+  it('moves by calendar days across month and daylight-saving boundaries', () => {
+    expect(adjacentArchiveDate('2026-10-01', -1, today)).toBe('2026-09-30');
+    expect(adjacentArchiveDate('2026-10-31', 1, today)).toBe('2026-11-01');
+    expect(adjacentArchiveDate('2026-11-01', 1, today)).toBe('2026-11-02');
+    expect(adjacentArchiveDate('2026-11-02', -1, today)).toBe('2026-11-01');
+  });
+
+  it('moves across the year boundary', () => {
+    const january = new Date(2027, 0, 3);
+    expect(adjacentArchiveDate('2026-12-31', 1, january)).toBe('2027-01-01');
+    expect(adjacentArchiveDate('2027-01-01', -1, january)).toBe('2026-12-31');
+  });
+
+  it('does not navigate from invalid or unavailable dates', () => {
+    expect(adjacentArchiveDate('2026-09-31', 1, today)).toBeNull();
+    expect(adjacentArchiveDate('2026-11-13', -1, today)).toBeNull();
   });
 });

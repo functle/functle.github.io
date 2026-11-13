@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import App from '../../App';
-import { archiveDateRange, archiveUrlForDate, parseArchiveDate } from '../../lib/archive';
+import { adjacentArchiveDate, archiveDateRange, archiveUrlForDate, parseArchiveDate } from '../../lib/archive';
 import { puzzleFor } from '../../lib/puzzle';
 import { gameStorageKey } from '../../lib/storage';
 import type { Puzzle } from '../../lib/types';
@@ -39,10 +39,15 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
       return;
     }
     setError(null);
-    const href = window.location.href;
-    const archiveUrl = archiveUrlForDate(href, date);
+    navigateToPuzzle(date);
+  }
+
+  function navigateToPuzzle(selectedDate: string | null) {
+    if (!selectedDate) return;
+    const archiveUrl = archiveUrlForDate(window.location.href, selectedDate);
     if (archiveUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
       window.history.pushState(null, '', archiveUrl);
+      window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }
 
@@ -54,13 +59,25 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
     : undefined;
 
   if (puzzle) {
+    const previousDate = adjacentArchiveDate(puzzle.dateKey, -1, openedAt);
+    const nextDate = adjacentArchiveDate(puzzle.dateKey, 1, openedAt);
     return (
       <App
         key={storageKey}
         puzzle={puzzle}
         storageKey={storageKey}
         dateLabel={dateLabel}
-        rulesAction={<Link href="/">Back to today’s game</Link>}
+        puzzleNavigation={
+          <nav className="archive-navigation" aria-label="Archive puzzles">
+            <button type="button" aria-label="Previous archive puzzle" disabled={!previousDate} onClick={() => navigateToPuzzle(previousDate)}>
+              ← Back
+            </button>
+            <button type="button" aria-label="Next archive puzzle" disabled={!nextDate} onClick={() => navigateToPuzzle(nextDate)}>
+              Next →
+            </button>
+          </nav>
+        }
+        rulesAction={<Link href="/archive">Back to the archive</Link>}
       />
     );
   }
