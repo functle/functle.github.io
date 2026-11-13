@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 
 // The puzzle follows the player's local date and restores browser storage.
 // Mount it only in the browser so neither is evaluated during prerendering.
-const App = dynamic(() => import('../App'), {
+const DailyPuzzle = dynamic(() => import('./daily-puzzle'), {
   ssr: false,
   loading: () => (
     <main className="page">
@@ -18,5 +18,5 @@ const App = dynamic(() => import('../App'), {
 });
 
 export default function DailyGame() {
-  return <App />;
+  return <DailyPuzzle />;
 }

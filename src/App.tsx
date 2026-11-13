@@ -5,16 +5,16 @@
  * remembers both across reloads.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Graph from './components/Graph';
 import GuessInput from './components/GuessInput';
 import GuessRow from './components/GuessRow';
 import TeX from './components/TeX';
 import { formatCurve, latexCurve, sameCurve } from './lib/curve';
 import { gradeGuess } from './lib/grade';
-import { MAX_GUESSES, puzzleFor } from './lib/puzzle';
+import { MAX_GUESSES } from './lib/puzzle';
 import { buildShareText, copyToClipboard } from './lib/share';
-import type { Curve, GameStatus, Guess } from './lib/types';
+import type { Curve, GameStatus, Guess, Puzzle } from './lib/types';
 
 /**
  * Bumped if the saved shape ever changes, so old saves are discarded not
@@ -30,9 +30,9 @@ interface SavedDay {
   guesses: Guess[];
 }
 
-function loadDay(dateKey: string): Guess[] {
+function loadDay(storageKey: string, dateKey: string): Guess[] {
   try {
-    const raw = localStorage.getItem(`functle:${dateKey}`);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as SavedDay;
     if (parsed.version !== SAVE_VERSION || parsed.dateKey !== dateKey) return [];
@@ -44,21 +44,25 @@ function loadDay(dateKey: string): Guess[] {
   }
 }
 
-function saveDay(dateKey: string, guesses: Guess[]): void {
+function saveDay(storageKey: string, dateKey: string, guesses: Guess[]): void {
   try {
     const payload: SavedDay = { version: SAVE_VERSION, dateKey, guesses };
-    localStorage.setItem(`functle:${dateKey}`, JSON.stringify(payload));
+    localStorage.setItem(storageKey, JSON.stringify(payload));
   } catch {
     /* Not worth interrupting play over. */
   }
 }
 
-export default function App() {
-  // One puzzle per mount. If someone leaves the tab open past midnight they
-  // keep yesterday's puzzle until reload, which is the same as Wordle.
-  const puzzle = useMemo(() => puzzleFor(), []);
+interface AppProps {
+  puzzle: Puzzle;
+  /** Also use this as the React key to reset game state when switching puzzles. */
+  storageKey: string;
+}
 
-  const [guesses, setGuesses] = useState<Guess[]>(() => loadDay(puzzle.dateKey));
+export default function App({ puzzle, storageKey }: AppProps) {
+  const [guesses, setGuesses] = useState<Guess[]>(() =>
+    loadDay(storageKey, puzzle.dateKey)
+  );
   const [copied, setCopied] = useState(false);
   // Indices of guesses hidden from the graph. View state only, so not saved.
   const [hidden, setHidden] = useState<Set<number>>(() => new Set());
@@ -71,8 +75,8 @@ export default function App() {
       : 'playing';
 
   useEffect(() => {
-    saveDay(puzzle.dateKey, guesses);
-  }, [puzzle.dateKey, guesses]);
+    saveDay(storageKey, puzzle.dateKey, guesses);
+  }, [storageKey, puzzle.dateKey, guesses]);
 
   // Move focus to the outcome when the game ends, so a keyboard or screen
   // reader user is told rather than left in a disabled text box.
