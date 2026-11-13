@@ -1,29 +1,49 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import App from '../../App';
-import { archiveDateRange, parseArchiveDate } from '../../lib/archive';
+import { archiveDateRange, archiveUrlForDate, parseArchiveDate } from '../../lib/archive';
 import { puzzleFor } from '../../lib/puzzle';
 import { gameStorageKey } from '../../lib/storage';
 import type { Puzzle } from '../../lib/types';
 
 export default function ArchivePicker() {
-  const [range] = useState(() => archiveDateRange());
+  const searchParams = useSearchParams();
+  const requestedDate = searchParams.get('date');
+
+  // Browser Back/Forward restores the picker and game from the URL together.
+  return <ArchiveSelection key={requestedDate === null ? 'picker' : `date:${requestedDate}`} requestedDate={requestedDate} />;
+}
+
+function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
+  const [openedAt] = useState(() => new Date());
+  const range = archiveDateRange(openedAt);
   const hasPuzzles = range.max >= range.min;
-  const [date, setDate] = useState(hasPuzzles ? range.max : '');
-  const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [puzzle] = useState<Puzzle | null>(() => {
+    const selectedDate = requestedDate === null ? null : parseArchiveDate(requestedDate, openedAt);
+    return selectedDate ? puzzleFor(selectedDate) : null;
+  });
+  const [date, setDate] = useState(puzzle?.dateKey ?? (hasPuzzles ? range.max : ''));
+  const invalidDateMessage = `Choose a date from ${range.min} through ${range.max}.`;
+  const [error, setError] = useState<string | null>(
+    requestedDate !== null && !puzzle ? invalidDateMessage : null
+  );
 
   function play(event: FormEvent) {
     event.preventDefault();
     const selectedDate = parseArchiveDate(date);
     if (!selectedDate) {
-      setError(`Choose a date from ${range.min} through ${range.max}.`);
+      setError(invalidDateMessage);
       return;
     }
     setError(null);
-    setPuzzle(puzzleFor(selectedDate));
+    const href = window.location.href;
+    const archiveUrl = archiveUrlForDate(href, date);
+    if (archiveUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.pushState(null, '', archiveUrl);
+    }
   }
 
   const storageKey = puzzle ? gameStorageKey('archive', puzzle.dateKey) : '';

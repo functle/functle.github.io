@@ -15,3 +15,10 @@ export function parseArchiveDate(value: string, when: Date = new Date()): Date |
   const { min, max } = archiveDateRange(when);
   return value >= min && value <= max ? date : null;
 }
+
+/** Keep the deployed base path, other query parameters, and fragment intact. */
+export function archiveUrlForDate(href: string, dateKey: string): string {
+  const url = new URL(href);
+  url.searchParams.set('date', dateKey);
+  return `${url.pathname}${url.search}${url.hash}`;
+}

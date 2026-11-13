@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archiveDateRange, parseArchiveDate } from './archive';
+import { archiveDateRange, archiveUrlForDate, parseArchiveDate } from './archive';
 import { dateKey, puzzleFor } from './puzzle';
 
 const today = new Date(2026, 10, 13, 0, 15);
@@ -32,5 +32,30 @@ describe('archive dates', () => {
     const firstDay = new Date(2026, 8, 1);
     expect(archiveDateRange(firstDay).max).toBe('2026-08-31');
     expect(parseArchiveDate('2026-09-01', firstDay)).toBeNull();
+  });
+});
+
+describe('archive URLs', () => {
+  it.each(['/archive', '/archive/', '/functle/archive/'])(
+    'keeps the deployed path %s when selecting a date', (path) => {
+      expect(archiveUrlForDate(`https://example.com${path}`, '2026-11-12'))
+        .toBe(`${path}?date=2026-11-12`);
+    }
+  );
+
+  it('replaces the selected date while preserving other URL details', () => {
+    const url = archiveUrlForDate(
+      'https://example.com/functle/archive/?source=friend&date=2026-11-11#game',
+      '2026-11-12'
+    );
+    expect(url).toBe('/functle/archive/?source=friend&date=2026-11-12#game');
+    const parsedDate = parseArchiveDate(new URL(url, 'https://example.com').searchParams.get('date')!, today)!;
+    expect(dateKey(parsedDate)).toBe('2026-11-12');
+    expect(puzzleFor(parsedDate)).toEqual(puzzleFor(new Date(2026, 10, 12)));
+  });
+
+  it('replaces repeated date parameters with a single selected date', () => {
+    expect(archiveUrlForDate('https://example.com/archive?date=bad&date=2026-11-11', '2026-11-12'))
+      .toBe('/archive?date=2026-11-12');
   });
 });
