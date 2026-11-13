@@ -17,7 +17,7 @@ import type { Curve, Puzzle } from './types';
 export const MAX_GUESSES = 6;
 
 /** Puzzle #1. Changing this renumbers every puzzle, so leave it alone. */
-const EPOCH = '2026-09-01';
+export const FIRST_PUZZLE_DATE = '2026-09-01';
 
 /** Quadratics steeper than this show only a sliver of curve inside the grid. */
 const MAX_LEADING = 5;
@@ -288,7 +288,7 @@ export function puzzleFor(when: Date = new Date()): Puzzle {
   }
 
   return {
-    number: daysBetween(EPOCH, key) + 1,
+    number: daysBetween(FIRST_PUZZLE_DATE, key) + 1,
     dateKey: key,
     answer,
   };

@@ -66,6 +66,26 @@ body {
   margin-bottom: calc(var(--step) * 3);
 }
 
+.game-nav {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: calc(var(--step) * 2) calc(var(--step) * 2) 0;
+  font-size: 0.875rem;
+}
+
+.game-nav a,
+.archive-picker a {
+  color: var(--plot);
+}
+
+.archive-picker {
+  padding-bottom: 0;
+}
+
+.archive-empty {
+  color: var(--ink-soft);
+}
+
 /* The title is set in the monospace face at a tight tracking: the game is about
    reading notation, so the notation face carries the name too. */
 .masthead__title {
