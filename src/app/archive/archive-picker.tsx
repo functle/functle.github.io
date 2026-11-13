@@ -53,6 +53,18 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
       })
     : undefined;
 
+  if (puzzle) {
+    return (
+      <App
+        key={storageKey}
+        puzzle={puzzle}
+        storageKey={storageKey}
+        dateLabel={dateLabel}
+        rulesAction={<Link href="/">Back to today’s game</Link>}
+      />
+    );
+  }
+
   return (
     <>
       <header className="page archive-picker">
@@ -87,11 +99,7 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
           </form>
         ) : <p>Past puzzles will be available after the first daily puzzle.</p>}
       </header>
-      {puzzle ? (
-        <App key={storageKey} puzzle={puzzle} storageKey={storageKey} dateLabel={dateLabel} />
-      ) : (
-        <main className="page archive-empty"><p>Choose a date and press Play to start.</p></main>
-      )}
+      <main className="page archive-empty"><p>Choose a date and press Play to start.</p></main>
     </>
   );
 }
