@@ -162,7 +162,9 @@ export default function GuessInput({
                 graph reference means nothing. */}
             <span className="sr-only">, will be drawn in {upcoming.name}</span>
           </>
-        ) : null}
+        ) : (
+          <>Expanded, intercept, and vertex forms work, e.g. (x-1)(x-3) or (x-2)^2-1.</>
+        )}
       </p>
     </form>
   );

@@ -14,7 +14,7 @@ The mystery curve is one of two types:
 
 The game does not tell you which type it is. Working that out from the graph is part of the puzzle.
 
-Every number is a whole number from −10 to 10. After each guess:
+The coefficients in these standard forms are whole numbers from −10 to 10. After each guess:
 
 - The type box turns green if you picked the right type and red if you did not.
 - Each number is graded on its own. Green means it is right. An orange arrow shows which way to move it: ↑ to go higher, ↓ to go lower.
@@ -27,6 +27,8 @@ Each guess is drawn on the graph as a dashed line in its own colour. Untick the 
 
 Type the function as plain text, using `^` for a power and `/` for a fraction: `2x^2-3x+5`, `x^3-2x+1` or `3/(x-2)+1`. Press space to see it formatted as maths, and keep typing to go back to editing the text. Press Enter to submit.
 
-For polynomials the order of terms does not matter, so 5 − 3x + 2x² works as well as 2x² − 3x + 5.
+Equivalent forms are accepted. For example, `x^2-4x+3`, `(x-1)(x-3)` (intercept or factored form), and `(x-2)^2-1` (vertex form) all count as the same quadratic. Brackets, implicit multiplication, fractions, and decimals work too: `2(x-3/4)^2-1/8` is equivalent to `2x^2-3x+1`. The game simplifies your expression before checking the coefficient range and grading it.
+
+You can also factor cubics and rearrange rational functions: `x(x-1)(x+1)` becomes `x^3-x`, and `(x+1)/(x-2)` becomes `3/(x-2)+1`. The simplified function must still be one of the supported shapes above, with whole-number coefficients from −10 to 10. Expressions with extra holes caused by cancelled denominators are rejected.
 
 Watch the sign on h. A vertical guide line at x = 2 means h is 2, and the function is written 3/(x − 2) + 1.

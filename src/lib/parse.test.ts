@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatCurve } from './curve';
 import { parseCurve } from './parse';
+import { gradeGuess } from './grade';
 import type { Curve, Quadratic, Rational } from './types';
 
 /** Unwraps a successful parse, failing loudly with the error if it did not. */
@@ -131,14 +132,13 @@ describe('parseCurve on depressed cubics', () => {
     expect(errorFor('')).toMatch(/Type a function/);
   });
 
-  it('points a negative exponent at the fraction notation instead', () => {
-    // x^-1 is a rational function, which the game now supports — but only in
-    // the a/(x-h)+k form it grades, so the error has to say where to go.
-    expect(errorFor('x^-1')).toMatch(/as a fraction/);
+  it('accepts negative powers as equivalent rational notation', () => {
+    expect(curve('x^-1')).toEqual(curve('1/x'));
+    expect(curve('3(x-2)⁻¹+1')).toEqual(curve('3/(x-2)+1'));
   });
 
-  it('rejects stray brackets with a hint about fractions', () => {
-    expect(errorFor('(x+1)')).toMatch(/Brackets only belong in a fraction/);
+  it('accepts brackets around a polynomial', () => {
+    expect(curve('(x+1)')).toEqual(curve('x+1'));
   });
 });
 
@@ -198,16 +198,18 @@ describe('parseCurve on rationals', () => {
     expect(errorFor('0/(x-2)+1')).toMatch(/flat line/);
   });
 
-  it('rejects a denominator with no x', () => {
-    expect(errorFor('3/2')).toMatch(/needs an x/);
+  it('requires a constant fraction to simplify to a whole number', () => {
+    expect(errorFor('3/2')).toMatch(/whole numbers/);
+    expect(curve('6/2')).toEqual(curve('3'));
   });
 
   it('rejects a squared denominator', () => {
     expect(errorFor('3/(x^2)')).toMatch(/first power/);
   });
 
-  it('rejects two fractions', () => {
-    expect(errorFor('1/x + 1/(x-1)')).toMatch(/One fraction per guess/);
+  it('rejects fractions that do not simplify to a supported curve', () => {
+    expect(errorFor('1/x + 1/(x-1)')).toMatch(/first power/);
+    expect(curve('1/x+2/x')).toEqual(curve('3/x'));
   });
 
   it('rejects an x term alongside the fraction', () => {
@@ -226,6 +228,92 @@ describe('parseCurve on rationals', () => {
 
   it('rejects decimals', () => {
     expect(errorFor('2.5/(x-1)')).toMatch(/whole numbers/);
+  });
+});
+
+describe('equivalent function forms', () => {
+  it.each([
+    ['x^2-4x+3', '(x-1)(x-3)', '(x-2)^2-1'],
+    ['2x^2-8x+6', '2*(x-1)*(x-3)', '2(x-2)^2-2'],
+    ['-x^2+4x-3', '-(x-1)(x-3)', '-(x-2)^2+1'],
+    ['2x^2-3x+1', '(2x-1)(x-1)', '2(x-3/4)^2-1/8'],
+    ['2x^2-3x+1', '2(x-0.5)(x-1)', '2(x-.75)^2-.125'],
+    ['x^2+2x+1', '(x+1)(x+1)', '(x+1)²'],
+    ['x^2', 'x*x', '(x-0)^2+0'],
+    ['x^3-x', 'x(x-1)(x+1)', '(x+1)^3-3x(x+1)-x-1'],
+    ['2x+3', '2(x+1.5)', '(4x+6)/2'],
+    ['3/(x-2)+1', '(x+1)/(x-2)', '(2x+2)/(2x-4)'],
+    ['-3/(x-2)+1', '(x-5)/(x-2)', '1+3/(2-x)'],
+  ])('grades all forms of %s identically', (expanded, ...forms) => {
+    const answer = curve(expanded);
+    for (const form of forms) {
+      const parsed = curve(form);
+      expect(parsed).toEqual(answer);
+      expect(gradeGuess(parsed, answer).won).toBe(true);
+      expect(gradeGuess(parsed, curve('2x^2-3x+5')))
+        .toEqual(gradeGuess(answer, curve('2x^2-3x+5')));
+    }
+  });
+
+  it('accepts exact fractional vertex forms across the coefficient range', () => {
+    for (let a = -10; a <= 10; a++) {
+      if (a === 0) continue;
+      for (const b of [-10, -3, 0, 3, 10]) {
+        for (const c of [-10, -3, 0, 3, 10]) {
+          const form = `${a}(x+(${b})/(${2 * a}))^2+(${4 * a * c - b * b})/(${4 * a})`;
+          expect(curve(form)).toEqual({ kind: 'quadratic', a, b, c });
+        }
+      }
+    }
+  });
+
+  it('checks the simplified coefficients rather than the typed numbers', () => {
+    expect(curve('(x-11)^2+22x-120')).toEqual(curve('x^2+1'));
+    expect(errorFor('(x-6)^2')).toMatch(/between -10 and 10/);
+    expect(errorFor('(x-.1)^2')).toMatch(/whole numbers/);
+    expect(curve('3*(x/3)+.1+.2+.7')).toEqual(curve('x+1'));
+    expect(errorFor('x^2+1.00000000000000001')).toMatch(/whole numbers/);
+  });
+
+  it('follows operator precedence and keeps multiplication explicit when needed', () => {
+    expect(curve('-2(x-1)^2')).toEqual(curve('-2x^2+4x-2'));
+    expect(curve('(-2x)^2')).toEqual(curve('4x^2'));
+    expect(curve('2/2*x^2')).toEqual(curve('x^2'));
+    expect(curve('x^2--2x+-1')).toEqual(curve('x^2+2x-1'));
+    expect(errorFor('2**x')).toMatch(/stuck/);
+    expect(errorFor('x2')).toMatch(/Separate terms/);
+  });
+
+  it.each(['(x-1)(x+1', 'x+1)', '()', '(x+)^2', 'x^', 'x/0', 'x/(x-x)', '1/(0x)', '0^-1'])
+    ('rejects malformed or undefined input: %s', (input) => {
+      expect(parseCurve(input).ok).toBe(false);
+    });
+
+  it('does not erase holes when cancelling fractions', () => {
+    expect(errorFor('(x^2-1)/(x-1)')).toMatch(/hole/);
+    expect(errorFor('1/(1/x)')).toMatch(/hole/);
+    expect(errorFor('1/x-1/x+x^2')).toMatch(/hole/);
+    expect(errorFor('(x-3)/((x-2)(x-3))')).toMatch(/hole/);
+    expect(curve('(x-2)/(x-2)^2')).toEqual(curve('1/(x-2)'));
+    expect(curve('(x^2+1)/(x^2+1)')).toEqual(curve('1'));
+    expect(curve('(x^4+1)/(x^4+1)')).toEqual(curve('1'));
+    expect(curve('(x^2+1)/((x-2)(x^2+1))')).toEqual(curve('1/(x-2)'));
+    expect(errorFor('(x^2-2)/(x^2-2)')).toMatch(/hole/);
+    expect(errorFor('(x^2-2)^2/(x^2-2)^2')).toMatch(/hole/);
+  });
+
+  it('rejects unsupported final shapes after expansion', () => {
+    expect(errorFor('(x+1)^3')).toMatch(/no x\^2 term/);
+    expect(errorFor('(x+1)^4')).toMatch(/x\^3 is the most/);
+    expect(errorFor('(x+1)/(x-2)^2')).toMatch(/first power/);
+    expect(errorFor('2(x+y)')).toMatch(/only understand x/);
+  });
+
+  it('bounds work while parsing live input', () => {
+    expect(errorFor('('.repeat(33) + 'x' + ')'.repeat(33))).toMatch(/nested brackets/);
+    expect(errorFor('x+'.repeat(300) + '1')).toMatch(/too long/);
+    expect(errorFor('x^9999999')).toMatch(/power is too large/);
+    expect(errorFor('x^12*x')).toMatch(/too complicated/);
   });
 });
 
