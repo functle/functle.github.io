@@ -31,3 +31,14 @@ export function adjacentArchiveDate(value: string, direction: -1 | 1, when: Date
   const adjacent = dateKey(date);
   return parseArchiveDate(adjacent, when) ? adjacent : null;
 }
+
+/** Give every available calendar date the same chance, including across DST. */
+export function randomArchiveDate(when: Date = new Date()): string | null {
+  const { min, max } = archiveDateRange(when);
+  if (max < min) return null;
+  // Date-only strings count UTC calendar days; the selected date stays local.
+  const days = Math.round((Date.parse(max) - Date.parse(min)) / 86400000) + 1;
+  const date = new Date(`${min}T00:00:00`);
+  date.setDate(date.getDate() + Math.floor(Math.random() * days));
+  return dateKey(date);
+}

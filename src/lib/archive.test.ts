@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { adjacentArchiveDate, archiveDateRange, archiveUrlForDate, parseArchiveDate } from './archive';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { adjacentArchiveDate, archiveDateRange, archiveUrlForDate, parseArchiveDate, randomArchiveDate } from './archive';
 import { dateKey, puzzleFor } from './puzzle';
 
 const today = new Date(2026, 10, 13, 0, 15);
@@ -84,5 +84,42 @@ describe('archive navigation', () => {
   it('does not navigate from invalid or unavailable dates', () => {
     expect(adjacentArchiveDate('2026-09-31', 1, today)).toBeNull();
     expect(adjacentArchiveDate('2026-11-13', -1, today)).toBeNull();
+  });
+});
+
+describe('random archive puzzles', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('can select both the first available puzzle and yesterday', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.999999);
+    expect(randomArchiveDate(today)).toBe('2026-09-01');
+    expect(randomArchiveDate(today)).toBe('2026-11-12');
+    expect(random).toHaveBeenCalledTimes(2);
+  });
+
+  it('selects each calendar day around daylight-saving time', () => {
+    const random = vi.spyOn(Math, 'random');
+    const november = new Date(2026, 10, 4);
+    for (const [index, expected] of [
+      [60, '2026-10-31'], [61, '2026-11-01'],
+      [62, '2026-11-02'], [63, '2026-11-03'],
+    ] as const) {
+      random.mockReturnValue((index + 0.5) / 64);
+      const selected = randomArchiveDate(november)!;
+      expect(selected).toBe(expected);
+      expect(parseArchiveDate(selected, november)).not.toBeNull();
+    }
+  });
+
+  it('handles an archive containing only one puzzle', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.999999);
+    expect(randomArchiveDate(new Date(2026, 8, 2))).toBe('2026-09-01');
+  });
+
+  it('returns no date when the archive is not available yet', () => {
+    const random = vi.spyOn(Math, 'random');
+    expect(randomArchiveDate(new Date(2026, 8, 1))).toBeNull();
+    expect(randomArchiveDate(new Date(2026, 7, 31))).toBeNull();
+    expect(random).not.toHaveBeenCalled();
   });
 });

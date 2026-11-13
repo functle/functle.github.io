@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import App from '../../App';
-import { adjacentArchiveDate, archiveDateRange, archiveUrlForDate, parseArchiveDate } from '../../lib/archive';
+import { adjacentArchiveDate, archiveDateRange, archiveUrlForDate, parseArchiveDate, randomArchiveDate } from '../../lib/archive';
 import { puzzleFor } from '../../lib/puzzle';
 import { gameStorageKey } from '../../lib/storage';
 import type { Puzzle } from '../../lib/types';
@@ -107,6 +107,13 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
                 }}
               />
               <button className="entry__submit" type="submit">Play</button>
+              <button
+                className="entry__submit archive-picker__random"
+                type="button"
+                onClick={() => navigateToPuzzle(randomArchiveDate(openedAt))}
+              >
+                Random
+              </button>
             </div>
             <p className="entry__note" id="archive-range">
               Available from <time dateTime={range.min}>{range.min}</time> through{' '}

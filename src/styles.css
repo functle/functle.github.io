@@ -75,6 +75,26 @@ body {
   padding-bottom: 0;
 }
 
+.archive-picker .entry__row {
+  flex-wrap: wrap;
+}
+
+.archive-picker .entry__field {
+  flex: 0 1 16rem;
+  width: 16rem;
+  max-width: 100%;
+}
+
+.archive-picker .entry__submit {
+  min-height: 3.25rem;
+}
+
+.archive-picker .archive-picker__random {
+  color: var(--plot);
+  background: var(--stock);
+  border-color: var(--grid);
+}
+
 .archive-empty {
   padding-top: 0;
   color: var(--ink-soft);
