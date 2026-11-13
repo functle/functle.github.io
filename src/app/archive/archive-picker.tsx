@@ -106,7 +106,6 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
                   setError(null);
                 }}
               />
-              <button className="entry__submit" type="submit">Play</button>
               <button
                 className="entry__submit archive-picker__random"
                 type="button"
@@ -114,6 +113,7 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
               >
                 Random
               </button>
+              <button className="entry__submit" type="submit">Play</button>
             </div>
             <p className="entry__note" id="archive-range">
               Available from <time dateTime={range.min}>{range.min}</time> through{' '}

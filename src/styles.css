@@ -76,7 +76,7 @@ body {
 }
 
 .archive-picker .entry__row {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .archive-picker .entry__field {
@@ -495,6 +495,9 @@ body {
 .archive-navigation {
   display: flex;
   justify-content: flex-end;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
   gap: var(--step);
   margin-top: calc(var(--step) * 2);
 }
@@ -563,6 +566,22 @@ body {
 
 /* On narrow screens the expression and its cells stop fitting side by side. */
 @media (max-width: 30rem) {
+  .archive-picker .entry__row {
+    gap: calc(var(--step) * 0.75);
+  }
+
+  .archive-picker .entry__field {
+    flex: 1 1 0;
+    width: 0;
+    padding-inline: var(--step);
+    font-size: 1rem;
+  }
+
+  .archive-picker .entry__submit {
+    padding-inline: var(--step);
+    font-size: 0.875rem;
+  }
+
   .guess {
     flex-direction: column;
     align-items: flex-start;
