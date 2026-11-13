@@ -21,10 +21,11 @@ interface AppProps {
   puzzle: Puzzle;
   /** Also use this as the React key to reset game state when switching puzzles. */
   storageKey: string;
+  dateLabel?: string;
   rulesAction?: ReactNode;
 }
 
-export default function App({ puzzle, storageKey, rulesAction }: AppProps) {
+export default function App({ puzzle, storageKey, dateLabel, rulesAction }: AppProps) {
   const [guesses, setGuesses] = useState<Guess[]>(() =>
     loadDay(storageKey, puzzle.dateKey)
   );
@@ -77,7 +78,9 @@ export default function App({ puzzle, storageKey, rulesAction }: AppProps) {
         {/* The type is deliberately not named: working it out from the graph
             is part of the puzzle, and each guess row reports it. */}
         <p className="masthead__sub">
-          Puzzle {puzzle.number} · Read the curve, guess the function
+          Puzzle {puzzle.number}
+          {dateLabel && <> · <time dateTime={puzzle.dateKey}>{dateLabel}</time></>}
+          {' · Read the curve, guess the function'}
         </p>
       </header>
 

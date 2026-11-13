@@ -47,6 +47,11 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
   }
 
   const storageKey = puzzle ? gameStorageKey('archive', puzzle.dateKey) : '';
+  const dateLabel = puzzle
+    ? new Date(`${puzzle.dateKey}T00:00:00`).toLocaleDateString('en-US', {
+        month: 'long', day: 'numeric', year: 'numeric',
+      })
+    : undefined;
 
   return (
     <>
@@ -83,7 +88,7 @@ function ArchiveSelection({ requestedDate }: { requestedDate: string | null }) {
         ) : <p>Past puzzles will be available after the first daily puzzle.</p>}
       </header>
       {puzzle ? (
-        <App key={storageKey} puzzle={puzzle} storageKey={storageKey} />
+        <App key={storageKey} puzzle={puzzle} storageKey={storageKey} dateLabel={dateLabel} />
       ) : (
         <main className="page archive-empty"><p>Choose a date and press Play to start.</p></main>
       )}
