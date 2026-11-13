@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Game shell: holds the day's guesses, decides when the game is over, and
  * remembers both across reloads.

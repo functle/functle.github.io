@@ -7,7 +7,6 @@
  */
 
 import katex from 'katex';
-import 'katex/dist/katex.min.css';
 
 export default function TeX({ source }: { source: string }) {
   const html = katex.renderToString(source, {
