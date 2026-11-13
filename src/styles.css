@@ -76,7 +76,12 @@ body {
 }
 
 .archive-empty {
+  padding-top: 0;
   color: var(--ink-soft);
+}
+
+.archive-empty p {
+  margin-top: var(--step);
 }
 
 /* The title is set in the monospace face at a tight tracking: the game is about
