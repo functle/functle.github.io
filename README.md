@@ -2,56 +2,6 @@
 
 A daily puzzle in the spirit of Wordle: read a curve off the graph and guess the function behind it. You get six guesses, and everyone gets the same curve each day.
 
-## Development
-
-Functle uses Next.js App Router, React, and TypeScript. Use Node.js 24 LTS.
-
-```sh
-npm ci
-npm run dev
-```
-
-Open http://localhost:3000. To build and run the production server:
-
-```sh
-npm run build
-npm start
-```
-
-`npm run preview` also starts the production server after a build.
-
-```sh
-npm test
-npm run lint
-npm run typecheck
-```
-
-The route and document layout live in `src/app`. The daily game mounts in the
-browser so puzzle selection follows the player's local date and saved guesses
-are restored before play. Existing `functle:YYYY-MM-DD` saves remain compatible
-when the site is served from the same origin.
-
-## Deployment
-
-Normal builds support the Next.js Node.js server. The GitHub Pages workflow
-sets `NEXT_STATIC_EXPORT=true` to generate a static site in `out/` and uses the
-Pages base path for assets. It runs the tests, linter, and type checker before building.
-
-To reproduce a static export in PowerShell:
-
-```powershell
-$env:NEXT_STATIC_EXPORT = 'true'
-npm run build
-Remove-Item Env:NEXT_STATIC_EXPORT
-```
-
-Serve `out/` with a static file server. `npm start` requires a normal server build;
-run `npm run build` again after clearing `NEXT_STATIC_EXPORT` to switch back.
-For a site hosted under a subpath, set `NEXT_PUBLIC_BASE_PATH` to that path at
-build time (for example, `/functle`).
-
-Live multiplayer will require a backend host; GitHub Pages serves static files.
-
 ## How to play
 
 The mystery curve is one of two types:
