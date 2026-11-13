@@ -5,7 +5,7 @@
  * remembers both across reloads.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Graph from './components/Graph';
 import GuessInput from './components/GuessInput';
 import GuessRow from './components/GuessRow';
@@ -21,9 +21,10 @@ interface AppProps {
   puzzle: Puzzle;
   /** Also use this as the React key to reset game state when switching puzzles. */
   storageKey: string;
+  rulesAction?: ReactNode;
 }
 
-export default function App({ puzzle, storageKey }: AppProps) {
+export default function App({ puzzle, storageKey, rulesAction }: AppProps) {
   const [guesses, setGuesses] = useState<Guess[]>(() =>
     loadDay(storageKey, puzzle.dateKey)
   );
@@ -138,16 +139,19 @@ export default function App({ puzzle, storageKey }: AppProps) {
         </>
       )}
 
-      <details className="rules">
-        <summary>How it works</summary>
-        {/* One line each, so the tall fraction gets a line to itself instead
-            of pushing a sentence apart mid-way. */}
-        <ul className="rules__lines">
-          <li>Guess the function on the graph in 6 tries.</li>
-          <li>It is either a polynomial or a rational function.</li>
-          <li>Green means a number is right. ↑ or ↓ shows which way to move it.</li>
-        </ul>
-      </details>
+      <footer className="game-footer">
+        <details className="rules">
+          <summary>How it works</summary>
+          {/* One line each, so the tall fraction gets a line to itself instead
+              of pushing a sentence apart mid-way. */}
+          <ul className="rules__lines">
+            <li>Guess the function on the graph in 6 tries.</li>
+            <li>It is either a polynomial or a rational function.</li>
+            <li>Green means a number is right. ↑ or ↓ shows which way to move it.</li>
+          </ul>
+        </details>
+        {rulesAction && <div className="game-footer__action">{rulesAction}</div>}
+      </footer>
     </main>
   );
 }

@@ -13,11 +13,11 @@ export default function DailyPuzzle() {
   const storageKey = gameStorageKey('daily', puzzle.dateKey);
 
   return (
-    <>
-      <nav className="game-nav" aria-label="Game modes">
-        <Link href="/archive">Play the archive</Link>
-      </nav>
-      <App key={storageKey} puzzle={puzzle} storageKey={storageKey} />
-    </>
+    <App
+      key={storageKey}
+      puzzle={puzzle}
+      storageKey={storageKey}
+      rulesAction={<Link href="/archive">Play the archive</Link>}
+    />
   );
 }
