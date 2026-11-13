@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { slots } from './curve';
+import { parseArchiveDate } from './archive';
 import {
   countVisiblePoints,
   dateKey,
@@ -25,6 +26,21 @@ describe('dateKey', () => {
 });
 
 describe('puzzleFor', () => {
+  it('preserves published answers and numbering in daily and archive play', () => {
+    // Freeze the published history through November 13, 2026. Do not update
+    // this snapshot to accommodate generator changes: existing saves depend
+    // on these answers. New generation rules must only affect future dates.
+    const published = Array.from({ length: 74 }, (_, index) => {
+      const dailyDate = new Date(2026, 8, 1 + index, 23, 59);
+      const daily = puzzleFor(dailyDate);
+      const archivedDate = parseArchiveDate(daily.dateKey, new Date(2026, 10, 14))!;
+      expect(puzzleFor(archivedDate)).toEqual(daily);
+      return daily;
+    });
+    // One JSON record per date keeps historical changes easy to review.
+    expect(published.map((puzzle) => JSON.stringify(puzzle)).join('\n')).toMatchSnapshot();
+  });
+
   it('gives the same answer for the same date every time', () => {
     const a = puzzleFor(new Date(2026, 8, 15));
     const b = puzzleFor(new Date(2026, 8, 15));

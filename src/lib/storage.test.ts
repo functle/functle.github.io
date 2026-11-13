@@ -69,6 +69,33 @@ describe('game progress storage', () => {
     expect(loadDay(archiveKey, otherDate)).toEqual([]);
   });
 
+  it.each(['daily', 'archive'] as const)('restores %s guesses after a fresh module load', async (mode) => {
+    const key = gameStorageKey(mode, dateKey);
+    const wrongCurve = { kind: 'quadratic', a: 2, b: 0, c: 0 } as const;
+    const guesses: Guess[] = [
+      { raw: '2x^2', curve: wrongCurve, grade: gradeGuess(wrongCurve, curve) },
+      guess,
+    ];
+    saveDay(key, dateKey, guesses);
+
+    vi.resetModules();
+    const freshStorage = await import('./storage');
+    const restored = freshStorage.loadDay(key, dateKey);
+    expect(restored).toEqual(guesses);
+    expect(restored.some((item) => item.grade.won)).toBe(true);
+  });
+
+  it.each([
+    'not JSON',
+    'null',
+    JSON.stringify({ version: 2, dateKey, guesses: [guess] }),
+    JSON.stringify({ version: 3, dateKey: '2026-11-11', guesses: [guess] }),
+    JSON.stringify({ version: 3, dateKey, guesses: {} }),
+  ])('ignores an unreadable or incompatible save: %s', (raw) => {
+    saved.set(archiveKey, raw);
+    expect(loadDay(archiveKey, dateKey)).toEqual([]);
+  });
+
   it('continues to tolerate unavailable browser storage', () => {
     vi.stubGlobal('localStorage', {
       getItem: () => { throw new Error('Storage unavailable'); },
