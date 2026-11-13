@@ -474,8 +474,8 @@ body {
 
 .archive-navigation {
   display: flex;
-  justify-content: space-between;
-  gap: calc(var(--step) * 2);
+  justify-content: flex-end;
+  gap: var(--step);
   margin-top: calc(var(--step) * 2);
 }
 

@@ -83,6 +83,7 @@ export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, r
           {dateLabel && <> · <time dateTime={puzzle.dateKey}>{dateLabel}</time></>}
           {' · Read the curve, guess the function'}
         </p>
+        {puzzleNavigation}
       </header>
 
       <Graph
@@ -142,8 +143,6 @@ export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, r
           )}
         </>
       )}
-
-      {puzzleNavigation}
 
       <footer className="game-footer">
         <details className="rules">
