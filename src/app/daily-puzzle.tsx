@@ -17,6 +17,11 @@ export default function DailyPuzzle() {
       key={storageKey}
       puzzle={puzzle}
       storageKey={storageKey}
+      puzzleNavigation={
+        <a className="challenge-link" href="https://functle-challenges.zh0ngy0925.workers.dev/challenge">
+          Challenge a friend (1v1)
+        </a>
+      }
       rulesAction={<Link href="/archive">Play the archive</Link>}
     />
   );

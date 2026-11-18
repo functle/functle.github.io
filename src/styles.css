@@ -66,6 +66,12 @@ body {
   margin-bottom: calc(var(--step) * 3);
 }
 
+.challenge-link {
+  display: inline-block;
+  margin-top: var(--step);
+}
+
+.challenge-link,
 .game-footer a,
 .archive-picker a {
   color: var(--plot);
