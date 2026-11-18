@@ -25,6 +25,17 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 .playing #players li { padding: .25rem 0; }
 .playing .actions { margin-top: 1rem; }
 #clock { text-align: right; font-variant-numeric: tabular-nums; }
+.result-dialog {
+	width: min(25rem, calc(100% - 2rem));
+	max-height: calc(100% - 2rem);
+	margin: auto;
+	color: var(--ink);
+}
+.result-dialog::backdrop { background: rgb(18 48 61 / .4); }
+.result-dialog .outcome__verdict { overflow-wrap: anywhere; }
+.result-dialog .outcome__answer { overflow-x: auto; }
 .result-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .result-actions button:disabled { opacity: .6; cursor: default; }
+.result-secondary { background: var(--stock); color: var(--plot); border-color: var(--grid); }
+.result-reopen { margin-top: 1rem; }
 .outcome__next:empty { display: none; }

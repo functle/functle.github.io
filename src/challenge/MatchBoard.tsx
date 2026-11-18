@@ -44,9 +44,10 @@ function history(player: Player): Guess[] {
 export default function MatchBoard({ view, you, verdict, disabled, onGuess, online, onRematch }: BoardProps) {
   const [toggles, setToggles] = useState<Set<number>>(() => new Set());
   const [copied, setCopied] = useState(false);
-  const outcome = useRef<HTMLDivElement>(null);
+  const outcome = useRef<HTMLDialogElement>(null);
+  const resultButton = useRef<HTMLButtonElement>(null);
   const finished = Boolean(view.result);
-  useEffect(() => { if (finished) outcome.current?.focus(); }, [finished]);
+  useEffect(() => { if (finished) outcome.current?.showModal(); }, [finished]);
 
   const me = view.players.find(player => player.number === you)!;
   const opponent = view.players.find(player => player.number !== you)!;
@@ -87,23 +88,33 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
   return <>
     <CurvePlot plot={view.graph} ghosts={ghosts} />
     {finished ? (
-      <div className="outcome" tabIndex={-1} ref={outcome}>
-        <p className="outcome__verdict">{verdict}</p>
-        <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
-        <div className="result-actions">
-          {view.rematch && (
-            <button type="button" className="outcome__share" disabled={!online || (!requested && !opponent.connected)}
-              onClick={() => onRematch(!requested)}>
-              {requested ? 'Cancel rematch' : offered ? 'Accept rematch' : 'Rematch'}
+      <>
+        <button type="button" className="outcome__share result-secondary result-reopen" ref={resultButton}
+          aria-haspopup="dialog" aria-live="polite" onClick={() => outcome.current?.showModal()}>
+          {offered && !requested ? 'View rematch offer' : 'View result'}
+        </button>
+        <dialog className="outcome result-dialog" ref={outcome} aria-labelledby="match-verdict"
+          onClose={() => resultButton.current?.focus({ preventScroll: true })}>
+          <h3 className="outcome__verdict" id="match-verdict">{verdict}</h3>
+          <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
+          <div className="result-actions">
+            {view.rematch && (
+              <button type="button" className="outcome__share" disabled={!online || (!requested && !opponent.connected)}
+                onClick={() => onRematch(!requested)}>
+                {requested ? 'Cancel rematch' : offered ? 'Accept rematch' : 'Rematch'}
+              </button>
+            )}
+            <button type="button" className="outcome__share" onClick={share}>{copied ? 'Copied' : 'Copy result'}</button>
+            <button type="button" className="outcome__share result-secondary" onClick={() => outcome.current?.close()}>
+              Close
             </button>
-          )}
-          <button type="button" className="outcome__share" onClick={share}>{copied ? 'Copied' : 'Copy result'}</button>
-        </div>
-        {view.rematch && <p className="outcome__next" role="status">
-          {!opponent.connected ? `${opponent.name} is offline.`
-            : requested ? `Waiting for ${opponent.name} to accept.` : offered ? `${opponent.name} wants a rematch.` : ''}
-        </p>}
-      </div>
+          </div>
+          {view.rematch && <p className="outcome__next" role="status">
+            {!opponent.connected ? `${opponent.name} is offline.`
+              : requested ? `Waiting for ${opponent.name} to accept.` : offered ? `${opponent.name} wants a rematch.` : ''}
+          </p>}
+        </dialog>
+      </>
     ) : remaining > 0 ? (
       <GuessInput disabled={disabled} nextIndex={guesses.length} onGuess={(raw, curve) =>
         guesses.some(guess => sameCurve(guess.curve, curve)) ? `You already tried ${formatCurve(curve)}.` : onGuess(raw)

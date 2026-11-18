@@ -92,6 +92,7 @@ function form(joining) {
 	el('find-room').hidden = joining;
 	el('room').hidden = true;
 	el('create-another').hidden = true;
+	renderBoard(null);
 }
 
 function unavailable(message) {
@@ -104,6 +105,7 @@ function unavailable(message) {
 	el('room').hidden = true;
 	el('feedback').textContent = '';
 	el('create-another').hidden = false;
+	renderBoard(null);
 }
 
 function draw(view) {
@@ -157,6 +159,7 @@ function draw(view) {
 		updateTime();
 		return;
 	}
+	renderBoard(null);
 	myReady = view.players.find((item) => item.number === you)?.ready ?? false;
 	el('ready').textContent = myReady ? 'Cancel ready' : 'Ready';
 	el('ready').setAttribute('aria-pressed', String(myReady));
