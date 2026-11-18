@@ -7,8 +7,8 @@
 	<meta name="challenge-api" content="https://functle-challenges.zh0ngy0925.workers.dev">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 	<link rel="stylesheet" href="./game/match.css">
-	<link rel="stylesheet" href="./lobby.css?v=match-status-spacing">
-	<script type="module" src="./lobby.js?v=match-result-return"></script>
+	<link rel="stylesheet" href="./lobby.css?v=room-code-row">
+	<script type="module" src="./lobby.js?v=room-code-box"></script>
 </head>
 <body>
 	<main class="page">
@@ -26,23 +26,37 @@
 			<p id="status" role="status">Opening lobby…</p>
 			<form id="entry" class="lobby-form" hidden>
 				<label for="name">Your display name</label>
-				<input id="name" name="name" autocomplete="nickname" maxlength="32" required>
-				<button id="submit">Create room</button>
+				<div class="name-entry">
+					<input id="name" name="name" autocomplete="nickname" maxlength="32" required>
+					<button id="submit" type="submit" aria-haspopup="dialog">Next</button>
+				</div>
 			</form>
-			<form id="find-room" class="lobby-form" aria-labelledby="join-title" hidden>
-				<h3 id="join-title">Join a room</h3>
-				<label for="room-invite">Room code or lobby link</label>
-				<input id="room-invite" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" required>
-				<button>Continue</button>
-			</form>
+			<dialog id="room-choice" class="outcome result-dialog" aria-labelledby="room-choice-title">
+				<h3 id="room-choice-title" class="outcome__verdict">Choose a room</h3>
+				<fieldset id="room-choice-controls">
+					<div id="room-options" class="actions">
+						<button id="create-room" type="button">Create room</button>
+						<button id="choose-join" type="button" class="secondary">Join room</button>
+					</div>
+					<form id="find-room" class="lobby-form" hidden>
+						<label for="room-invite">Room code or lobby link</label>
+						<input id="room-invite" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+						<div class="actions">
+							<button type="submit">Join room</button>
+							<button id="room-choice-back" type="button" class="secondary">Back</button>
+						</div>
+					</form>
+					<button id="close-room-choice" type="button" aria-label="Close">×</button>
+				</fieldset>
+				<p id="room-choice-feedback" class="outcome__next" role="status"></p>
+			</dialog>
 			<div id="room" hidden>
 				<div id="sharing">
 					<p>Six guesses each. Five minutes. The first player to solve the graph wins.</p>
-					<p>Room code <strong id="room-code"></strong></p>
-					<label for="invite">Invite link</label>
-					<div class="invite">
-						<input id="invite" readonly>
-						<button id="copy" class="secondary">Copy link</button>
+					<h3 class="room-code-label">Room code</h3>
+					<div class="room-sharing">
+						<strong id="room-code"></strong>
+						<button id="copy" type="button" class="outcome__share">Copy link</button>
 					</div>
 				</div>
 				<ul id="players" aria-label="Players"></ul>

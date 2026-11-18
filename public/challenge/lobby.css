@@ -7,17 +7,41 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 	border-bottom: 1px solid var(--grid);
 }
 #title[hidden] ~ #status { margin: 0; }
-.lobby-form label, #sharing label { display: block; margin-bottom: .35rem; font-weight: 600; }
-.lobby-form input, #invite, .lobby-form button, .invite button, .actions button { font: inherit; border-radius: var(--radius); min-height: 2.75rem; }
-.lobby-form input, #invite { min-width: 0; width: 100%; border: 1px solid var(--axis); padding: .5rem .65rem; color: inherit; }
-.lobby-form button, .actions button, .invite button { background: var(--plot); border: 1px solid var(--plot); color: white; font-weight: 600; padding: .4rem .9rem; cursor: pointer; }
+.lobby-form label { display: block; margin-bottom: .35rem; font-weight: 600; }
+.lobby-form input, .lobby-form button, .actions button { font: inherit; border-radius: var(--radius); min-height: 2.75rem; }
+.lobby-form input { min-width: 0; width: 100%; border: 1px solid var(--axis); padding: .5rem .65rem; color: inherit; }
+.lobby-form button, .actions button { background: var(--plot); border: 1px solid var(--plot); color: white; font-weight: 600; padding: .4rem .9rem; cursor: pointer; }
 .actions button:disabled, .lobby-form button:disabled { opacity: .6; cursor: default; }
-.actions .secondary, .invite .secondary { background: white; color: var(--plot); border-color: var(--grid); }
+.actions .secondary { background: white; color: var(--plot); border-color: var(--grid); }
 .lobby-form button { margin-top: 1rem; }
-#find-room { border-top: 1px solid var(--grid); margin-top: 1.25rem; }
-#room-code { font-family: var(--font-math); }
-.invite, .actions:not([hidden]) { display: flex; gap: .5rem; }
-.invite button { flex-shrink: 0; }
+.name-entry { display: flex; gap: .5rem; }
+.name-entry button { flex: none; margin-top: 0; }
+#room-choice-title { padding-inline-end: 2rem; }
+#room-choice-controls { min-width: 0; margin: 0; padding: 0; border: 0; }
+#room-choice .actions { flex-wrap: wrap; }
+#close-room-choice {
+	position: absolute;
+	inset-block-start: .75rem;
+	inset-inline-end: .75rem;
+	min-width: 2rem;
+	min-height: 2rem;
+	border: 0;
+	background: transparent;
+	color: var(--ink-soft);
+	font: inherit;
+	font-size: 1.25rem;
+	cursor: pointer;
+}
+#room-choice-feedback { color: var(--miss); }
+#room-code {
+	min-width: 0;
+	font-family: var(--font-math);
+	font-size: 1.375rem;
+	line-height: 1.25;
+	letter-spacing: .06em;
+	overflow-wrap: anywhere;
+}
+.actions:not([hidden]) { display: flex; gap: .5rem; }
 #players { list-style: none; margin: 1.5rem 0; padding: 0; }
 #players li { padding: .7rem 0; border-top: 1px solid var(--grid); display: flex; gap: .75rem; justify-content: space-between; align-items: center; }
 #players li:last-child { border-bottom: 1px solid var(--grid); }
@@ -47,8 +71,8 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 	overflow-wrap: anywhere;
 }
 .result-summary { margin-top: 1rem; }
-.result-summary__title { margin: 0 0 var(--step); }
-.result-summary__row {
+.room-code-label, .result-summary__title { margin: 0 0 var(--step); }
+.room-sharing, .result-summary__row {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -63,5 +87,5 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 .result-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .result-actions button:disabled { opacity: .6; cursor: default; }
 .result-secondary { background: var(--stock); color: var(--plot); border-color: var(--grid); }
-.result-reopen { margin-inline-start: auto; }
+#copy, .result-reopen { margin-inline-start: auto; }
 .outcome__next:empty { display: none; }

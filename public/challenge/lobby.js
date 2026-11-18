@@ -94,10 +94,10 @@ async function api(path, body, seat = onPages && code ? localStorage.getItem(sea
 function form(joining) {
 	el('title').textContent = joining ? 'Join a challenge' : 'Create a challenge';
 	el('title').hidden = false;
-	el('status').textContent = joining ? 'Choose a name to join your friend.' : 'Create a room to get a code and an invite link.';
-	el('submit').textContent = joining ? 'Join room' : 'Create room';
+	el('status').textContent = joining ? 'Choose a name to join your friend.' : 'Enter a display name.';
+	el('submit').textContent = joining ? 'Join room' : 'Next';
+	el('submit').setAttribute('aria-haspopup', joining ? 'false' : 'dialog');
 	el('entry').hidden = false;
-	el('find-room').hidden = joining;
 	el('room').hidden = true;
 	el('create-another').hidden = true;
 	el('match-result-links').hidden = true;
@@ -111,7 +111,6 @@ function unavailable(message) {
 	el('title').hidden = false;
 	el('status').textContent = message;
 	el('entry').hidden = true;
-	el('find-room').hidden = false;
 	el('room').hidden = true;
 	el('feedback').textContent = '';
 	el('create-another').hidden = false;
@@ -129,7 +128,6 @@ function draw(view) {
 	currentView = view;
 	serverOffset = view.serverNow - Date.now();
 	el('entry').hidden = true;
-	el('find-room').hidden = true;
 	el('room').hidden = false;
 	el('title').textContent = inMatch ? (finished ? 'Match result' : 'Challenge match') : 'Challenge lobby';
 	el('title').hidden = inMatch;
@@ -139,7 +137,6 @@ function draw(view) {
 	el('room-actions').hidden = inMatch;
 	el('create-another').hidden = true;
 	el('match-result-links').hidden = !finished;
-	el('invite').value = location.origin + roomLink(code);
 	el('room-code').textContent = code.toUpperCase().match(/.{4}/g).join('-');
 	const rows = [1, 2].map((number) => {
 		const player = view.players.find((item) => item.number === number);
@@ -230,6 +227,75 @@ async function load() {
 	}
 }
 
+async function enterRoom(id, controls, feedback) {
+	if (controls.disabled) return;
+	controls.disabled = true;
+	feedback.textContent = '';
+	try {
+		const path = id ? '/api/rooms/' + id : '/api/rooms';
+		const seat = onPages ? (id && localStorage.getItem(seatKey(id))) || crypto.randomUUID() : null;
+		if (seat && id) localStorage.setItem(seatKey(id), seat);
+		if (id && id !== code) {
+			// The standalone challenge site sets the guest's seat cookie on this GET.
+			const view = await api(path, undefined, seat);
+			if (view.status === 'member') {
+				location.replace(roomLink(id));
+				return;
+			}
+			if (view.status === 'full') throw new Error('Room full. Both seats are taken.');
+		}
+		const result = await api(id ? path + '/join' : path, { name: el('name').value.trim() }, seat);
+		if (seat) localStorage.setItem(seatKey(result.code), seat);
+		location.replace(roomLink(result.code));
+	} catch (error) {
+		if (controls === el('submit') && (error.status === 409 || error.status === 410)) unavailable(error.message);
+		else feedback.textContent = error.message;
+		controls.disabled = false;
+	}
+}
+
+function showJoinFields(joining) {
+	el('room-options').hidden = joining;
+	el('find-room').hidden = !joining;
+	el('room-choice-title').textContent = joining ? 'Join a room' : 'Choose a room';
+	el('room-choice-feedback').textContent = '';
+}
+
+const roomChoice = el('room-choice');
+const roomChoiceControls = el('room-choice-controls');
+const roomChoiceFeedback = el('room-choice-feedback');
+
+el('name').oninput = (event) => event.target.setCustomValidity('');
+el('entry').onsubmit = (event) => {
+	event.preventDefault();
+	const name = el('name');
+	if (!name.value.trim()) {
+		name.setCustomValidity('Enter your display name.');
+		name.reportValidity();
+		return;
+	}
+	if (code) {
+		void enterRoom(code, el('submit'), el('feedback'));
+		return;
+	}
+	showJoinFields(false);
+	roomChoice.showModal();
+};
+
+el('create-room').onclick = () => enterRoom(null, roomChoiceControls, roomChoiceFeedback);
+el('choose-join').onclick = () => {
+	showJoinFields(true);
+	el('room-invite').focus();
+};
+el('room-choice-back').onclick = () => {
+	showJoinFields(false);
+	el('choose-join').focus();
+};
+el('close-room-choice').onclick = () => roomChoice.close();
+roomChoice.oncancel = (event) => {
+	if (roomChoiceControls.disabled) event.preventDefault();
+};
+
 el('room-invite').oninput = (event) => event.target.setCustomValidity('');
 el('find-room').onsubmit = (event) => {
 	event.preventDefault();
@@ -240,24 +306,7 @@ el('find-room').onsubmit = (event) => {
 		input.reportValidity();
 		return;
 	}
-	location.assign(roomLink(id));
-};
-
-el('entry').onsubmit = async (event) => {
-	event.preventDefault();
-	el('submit').disabled = true;
-	el('feedback').textContent = '';
-	try {
-		const seat = onPages ? (code && localStorage.getItem(seatKey(code))) || crypto.randomUUID() : null;
-		if (seat && code) localStorage.setItem(seatKey(code), seat);
-		const result = await api(code ? roomApi + '/join' : '/api/rooms', { name: el('name').value }, seat);
-		if (seat) localStorage.setItem(seatKey(result.code), seat);
-		location.replace(roomLink(result.code));
-	} catch (error) {
-		if (error.status === 409 || error.status === 410) unavailable(error.message);
-		else el('feedback').textContent = error.message;
-		el('submit').disabled = false;
-	}
+	void enterRoom(id, roomChoiceControls, roomChoiceFeedback);
 };
 
 el('ready').onclick = () => {
@@ -268,12 +317,14 @@ el('ready').onclick = () => {
 };
 
 el('copy').onclick = async () => {
+	const invite = location.origin + roomLink(code);
+	const feedback = el('feedback');
+	feedback.textContent = '';
 	try {
-		await navigator.clipboard.writeText(el('invite').value);
-		el('feedback').textContent = 'Invite link copied.';
+		await navigator.clipboard.writeText(invite);
+		feedback.textContent = 'Invite link copied.';
 	} catch {
-		el('invite').select();
-		el('feedback').textContent = 'Copy the selected invite link.';
+		window.prompt('Copy this invite link:', invite);
 	}
 };
 
