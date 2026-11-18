@@ -1,4 +1,4 @@
-import { mountBoard } from './game/match.js?v=match-result-summary';
+import { mountBoard } from './game/match.js?v=result-leave';
 import { readRoomInvite } from './room-invite.js';
 import { roomPath, validRoomCode } from './room-code.js';
 
@@ -67,7 +67,7 @@ function drawMatch(view) {
 	}
 	el('status').textContent = finished ? '' : 'First to solve the graph wins.';
 	inputDisabled = disabled(view);
-	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess,
+	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess, onLeave: leaveFinishedRoom,
 		online: socket?.readyState === WebSocket.OPEN, onRematch: (accept) => {
 			if (socket?.readyState === WebSocket.OPEN) socket.send((accept ? 'rematch:' : 'cancel-rematch:') + view.startsAt);
 		} });
@@ -129,9 +129,8 @@ function draw(view) {
 	el('match').hidden = !inMatch;
 	el('title').parentElement.classList.toggle('playing', inMatch);
 	el('ready').hidden = inMatch;
-	el('leave').hidden = view.phase === 'finished';
-	el('leave').textContent = inMatch ? 'Forfeit match' : 'Leave room';
-	el('create-another').hidden = view.phase !== 'finished';
+	el('leave').textContent = view.phase === 'playing' ? 'Forfeit match' : 'Leave room';
+	el('create-another').hidden = true;
 	el('invite').value = location.origin + roomLink(code);
 	el('room-code').textContent = code.toUpperCase().match(/.{4}/g).join('-');
 	const rows = [1, 2].map((number) => {
@@ -270,7 +269,17 @@ el('copy').onclick = async () => {
 	}
 };
 
+function leaveFinishedRoom() {
+	clearTimeout(retryTimer);
+	if (socket) {
+		socket.onclose = null;
+		socket.close(1000, 'Left room');
+	}
+	location.replace(lobbyPath);
+}
+
 el('leave').onclick = async () => {
+	if (currentView?.phase === 'finished') return leaveFinishedRoom();
 	if (currentView?.phase === 'playing' && !confirm('Forfeit this match? Your opponent will win.')) return;
 	try {
 		const { state } = await api(roomApi + '/leave', { startsAt: currentView?.startsAt ?? null });
