@@ -1,22 +1,24 @@
 import { DurableObject } from 'cloudflare:workers';
 
-import { advance, cancelCountdown, forfeit, LOBBY_MS, matchesRound, nextAlarm, phase, setRematch, snapshot, startCountdown, submit, type Room } from './match';
+import { advance, cancelCountdown, EMPTY_ROOM_MS, forfeit, LOBBY_MS, matchesRound, nextAlarm, phase, setRematch, snapshot, startCountdown, submit, type Room } from './match';
 
 export class ChallengeRoom extends DurableObject<Env> {
 	private current(now = Date.now()): Room | undefined {
 		const room = this.ctx.storage.kv.get<Room>('lobby');
-		if (!room) return;
+		if (!room || (room.emptyExpiresAt !== undefined && now >= room.emptyExpiresAt)) return;
 		const changed = advance(room, now);
 		if (now >= nextAlarm(room)) return;
-		if (changed) this.save(room);
+		// Older stored rooms may already be empty when first seen after an upgrade.
+		if (changed || (room.emptyExpiresAt === undefined && !this.occupied(room))) this.save(room);
 		return room;
 	}
 
 	async create(name: string, hash: string) {
 		if (this.ctx.storage.kv.get('lobby')) return false;
-		const expiresAt = Date.now() + LOBBY_MS;
-		this.ctx.storage.kv.put<Room>('lobby', { expiresAt, seats: [{ name, hash, number: 1, ready: false }] });
-		await this.ctx.storage.setAlarm(expiresAt);
+		const now = Date.now();
+		const room: Room = { expiresAt: now + LOBBY_MS, emptyExpiresAt: now + EMPTY_ROOM_MS, seats: [{ name, hash, number: 1, ready: false }] };
+		this.ctx.storage.kv.put('lobby', room);
+		await this.ctx.storage.setAlarm(nextAlarm(room));
 		return true;
 	}
 
@@ -27,6 +29,8 @@ export class ChallengeRoom extends DurableObject<Env> {
 		if (lobby.seats.length >= 2) return 'full';
 		const number = lobby.seats.some((seat) => seat.number === 1) ? 2 : 1;
 		lobby.seats.push({ name, hash, number, ready: false });
+		// A new player has claimed a seat and is about to open its socket.
+		if (lobby.emptyExpiresAt !== undefined) lobby.emptyExpiresAt = Date.now() + EMPTY_ROOM_MS;
 		this.save(lobby);
 		return 'joined';
 	}
@@ -47,7 +51,6 @@ export class ChallengeRoom extends DurableObject<Env> {
 		lobby.seats = lobby.seats.filter((seat) => seat.hash !== hash);
 		for (const seat of lobby.seats) seat.ready = false;
 		for (const socket of this.ctx.getWebSockets(hash)) socket.close(4001, 'Seat released');
-		// Release the seat, but keep the public invite usable until the lobby expires.
 		this.save(lobby);
 		return 'left';
 	}
@@ -81,7 +84,8 @@ export class ChallengeRoom extends DurableObject<Env> {
 		if (!hash || !lobby.seats.some((seat) => seat.hash === hash)) return new Response('Join first', { status: 403 });
 		const [client, server] = Object.values(new WebSocketPair());
 		this.ctx.acceptWebSocket(server, [hash]);
-		this.broadcast(lobby);
+		if (lobby.emptyExpiresAt !== undefined) this.save(lobby);
+		else this.broadcast(lobby);
 		const headers = new Headers();
 		if (request.headers.get('Sec-WebSocket-Protocol') === 'functle') headers.set('Sec-WebSocket-Protocol', 'functle');
 		return new Response(null, { status: 101, webSocket: client, headers });
@@ -124,7 +128,7 @@ export class ChallengeRoom extends DurableObject<Env> {
 			this.save(lobby, socket);
 			return;
 		}
-		this.broadcast(lobby, socket);
+		this.save(lobby, socket);
 	}
 
 	webSocketError(socket: WebSocket) {
@@ -145,7 +149,13 @@ export class ChallengeRoom extends DurableObject<Env> {
 		return this.ctx.getWebSockets(hash).some((socket) => socket !== closing && socket.readyState === WebSocket.OPEN);
 	}
 
+	private occupied(lobby: Room, closing?: WebSocket) {
+		return lobby.seats.some((seat) => this.connected(seat.hash, closing));
+	}
+
 	private save(lobby: Room, closing?: WebSocket) {
+		if (this.occupied(lobby, closing)) delete lobby.emptyExpiresAt;
+		else lobby.emptyExpiresAt ??= Date.now() + EMPTY_ROOM_MS;
 		this.ctx.storage.kv.put('lobby', lobby);
 		this.ctx.waitUntil(this.ctx.storage.setAlarm(nextAlarm(lobby)));
 		this.broadcast(lobby, closing);

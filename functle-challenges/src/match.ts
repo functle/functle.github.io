@@ -6,6 +6,7 @@ import { answerForSeed, isPlayable, MAX_GUESSES, VIEW_LIMIT } from '../../src/li
 import type { Curve, Guess } from '../../src/lib/types';
 
 export const LOBBY_MS = 15 * 60_000;
+export const EMPTY_ROOM_MS = 60_000;
 export const COUNTDOWN_MS = 3_000;
 export const MATCH_MS = 5 * 60_000;
 export const RESULT_MS = 24 * 60 * 60_000;
@@ -15,7 +16,7 @@ export type Seat = { number: number; name: string; hash: string; ready: boolean;
 type Result = { reason: 'solved' | 'forfeit' | 'timeout' | 'exhausted'; winner: number | null };
 type Round = { startsAt: number; endsAt: number; answer?: Curve; result?: Result; rematch?: number[] };
 // Rooms created by the original lobby have neither a round nor guess histories.
-export type Room = { seats: Seat[]; expiresAt: number; round?: Round; previousAnswer?: Curve };
+export type Room = { seats: Seat[]; expiresAt: number; emptyExpiresAt?: number; round?: Round; previousAnswer?: Curve };
 
 export function phase(room: Room) {
 	if (!room.round) return 'waiting';
@@ -25,8 +26,8 @@ export function phase(room: Room) {
 
 export function nextAlarm(room: Room) {
 	const round = room.round;
-	if (!round || round.result) return room.expiresAt;
-	return round.answer ? round.endsAt : round.startsAt;
+	const next = !round || round.result ? room.expiresAt : round.answer ? round.endsAt : round.startsAt;
+	return Math.min(next, room.emptyExpiresAt ?? Infinity);
 }
 
 export function startCountdown(room: Room, now: number) {
@@ -79,7 +80,7 @@ export function forfeit(room: Room, seat: Seat, now: number) {
 // must never extend the original deadline or accept a guess after it.
 export function advance(room: Room, now: number) {
 	const round = room.round;
-	if (!round || round.result || now < nextAlarm(room)) return false;
+	if (!round || round.result || now < (round.answer ? round.endsAt : round.startsAt)) return false;
 	if (!round.answer) {
 		do { round.answer = answerForSeed(crypto.randomUUID()); }
 		while (!isPlayable(round.answer) || (room.previousAnswer && sameCurve(round.answer, room.previousAnswer)));
