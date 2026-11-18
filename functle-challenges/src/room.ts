@@ -46,8 +46,8 @@ export class ChallengeRoom extends DurableObject<Env> {
 		lobby.seats = lobby.seats.filter((seat) => seat.hash !== hash);
 		for (const seat of lobby.seats) seat.ready = false;
 		for (const socket of this.ctx.getWebSockets(hash)) socket.close(4001, 'Seat released');
-		if (lobby.seats.length) this.save(lobby);
-		else this.ctx.storage.kv.delete('lobby');
+		// Release the seat, but keep the public invite usable until the lobby expires.
+		this.save(lobby);
 		return 'left';
 	}
 
