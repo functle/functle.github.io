@@ -81,13 +81,16 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
     <CurvePlot plot={view.graph} ghosts={ghosts} />
     {finished ? (
       <>
-        <div className="result-summary">
-          <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
-          <button type="button" className="outcome__share result-secondary result-reopen" ref={resultButton}
-            aria-haspopup="dialog" aria-live="polite" onClick={() => outcome.current?.showModal()}>
-            {offered && !requested ? 'View rematch offer' : 'View result'}
-          </button>
-        </div>
+        <section className="result-summary" aria-labelledby="match-answer">
+          <h3 className="result-summary__title" id="match-answer">Answer</h3>
+          <div className="result-summary__row">
+            <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
+            <button type="button" className="outcome__share result-secondary result-reopen" ref={resultButton}
+              aria-haspopup="dialog" aria-live="polite" onClick={() => outcome.current?.showModal()}>
+              {offered && !requested ? 'View rematch offer' : 'View result'}
+            </button>
+          </div>
+        </section>
         <dialog className="outcome result-dialog" ref={outcome} aria-labelledby="match-verdict"
           onClose={() => resultButton.current?.focus({ preventScroll: true })}>
           <h3 className="outcome__verdict" id="match-verdict">{verdict}</h3>

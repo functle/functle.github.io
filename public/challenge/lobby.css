@@ -39,12 +39,17 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 	line-height: 1.2;
 	overflow-wrap: anywhere;
 }
-.result-summary {
+.result-summary { margin-top: 1rem; }
+.result-summary__title { margin: 0 0 var(--step); font-size: 1rem; }
+.result-summary__row {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: .75rem;
-	margin-top: 1rem;
+	padding: var(--step) calc(var(--step) * 1.5);
+	background: var(--stock);
+	border: 1px solid var(--grid);
+	border-radius: var(--radius);
 }
 .result-summary .outcome__answer { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .result-summary .tex { white-space: normal; }
