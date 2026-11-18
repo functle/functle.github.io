@@ -6,7 +6,6 @@ import GuessRow from '../components/GuessRow';
 import TeX from '../components/TeX';
 import { formatCurve, latexCurve, sameCurve } from '../lib/curve';
 import { parseCurve } from '../lib/parse';
-import { buildShareText, copyToClipboard } from '../lib/share';
 import type { Grade, Guess } from '../lib/types';
 
 interface Player {
@@ -43,7 +42,6 @@ function history(player: Player): Guess[] {
 
 export default function MatchBoard({ view, you, verdict, disabled, onGuess, online, onRematch }: BoardProps) {
   const [toggles, setToggles] = useState<Set<number>>(() => new Set());
-  const [copied, setCopied] = useState(false);
   const outcome = useRef<HTMLDialogElement>(null);
   const resultButton = useRef<HTMLButtonElement>(null);
   const finished = Boolean(view.result);
@@ -78,13 +76,6 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
     );
   }
 
-  async function share() {
-    const text = verdict + '\n' + buildShareText('1v1', guesses, guesses.some(guess => guess.grade.won));
-    const ok = await copyToClipboard(text);
-    setCopied(ok);
-    if (!ok) window.prompt('Copy your result:', text);
-  }
-
   return <>
     <CurvePlot plot={view.graph} ghosts={ghosts} />
     {finished ? (
@@ -104,7 +95,6 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
                 {requested ? 'Cancel rematch' : offered ? 'Accept rematch' : 'Rematch'}
               </button>
             )}
-            <button type="button" className="outcome__share" onClick={share}>{copied ? 'Copied' : 'Copy result'}</button>
             <button type="button" className="outcome__share result-secondary" onClick={() => outcome.current?.close()}>
               Close
             </button>
