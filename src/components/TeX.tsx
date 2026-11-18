@@ -1,9 +1,8 @@
 /**
  * Typesets a TeX string with KaTeX.
  *
- * The HTML is injected directly, which is safe here only because every string
- * this receives is built by latexCurve from parsed integers. Never pass it raw
- * player input.
+ * The HTML is injected directly. Pass fixed examples or strings built by
+ * latexCurve from parsed integers. Never pass raw player input.
  */
 
 import katex from 'katex';

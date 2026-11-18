@@ -164,7 +164,10 @@ export default function GuessInput({
             <span className="sr-only">, will be drawn in {upcoming.name}</span>
           </>
         ) : (
-          <>Expanded, intercept, and vertex forms work, e.g. (x-1)(x-3) or (x-2)^2-1.</>
+          <>
+            Expanded, intercept, and vertex forms work, e.g.{' '}
+            <TeX source="y = (x-1)(x-3)" /> or <TeX source="y = (x-2)^2-1" />.
+          </>
         )}
       </p>
     </form>
