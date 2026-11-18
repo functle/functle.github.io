@@ -85,7 +85,7 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
           <h3 className="result-summary__title" id="match-answer">Answer</h3>
           <div className="result-summary__row">
             <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
-            <button type="button" className="outcome__share result-secondary result-reopen" ref={resultButton}
+            <button type="button" className="outcome__share result-reopen" ref={resultButton}
               aria-haspopup="dialog" aria-live="polite" onClick={() => outcome.current?.showModal()}>
               {offered && !requested ? 'View rematch offer' : 'View result'}
             </button>

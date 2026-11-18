@@ -10,7 +10,7 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 .lobby-form button { margin-top: 1rem; }
 #find-room { border-top: 1px solid var(--grid); margin-top: 1.25rem; }
 #room-code { font-family: var(--font-math); }
-.invite, .actions { display: flex; gap: .5rem; }
+.invite, .actions:not([hidden]) { display: flex; gap: .5rem; }
 .invite button { flex-shrink: 0; }
 #players { list-style: none; margin: 1.5rem 0; padding: 0; }
 #players li { padding: .7rem 0; border-top: 1px solid var(--grid); display: flex; gap: .75rem; justify-content: space-between; align-items: center; }
@@ -20,11 +20,12 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 #players .ready { color: var(--hit); }
 #players .offline { color: #b3261e; }
 #feedback:empty, #status:empty { display: none; }
-#create-another, #create-after-match { color: var(--plot); }
+#create-another, #match-result-links a { color: var(--plot); }
 .playing #players { margin: .5rem 0; }
 .playing #players li { padding: .25rem 0; }
-.playing .actions { margin-top: 1rem; }
-#clock { text-align: right; font-variant-numeric: tabular-nums; }
+#match-controls { align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
+#clock { margin: 0; font-variant-numeric: tabular-nums; }
+#forfeit { margin-inline-start: auto; }
 .result-dialog {
 	width: min(25rem, calc(100% - 2rem));
 	max-height: calc(100% - 2rem);
@@ -40,18 +41,18 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 	overflow-wrap: anywhere;
 }
 .result-summary { margin-top: 1rem; }
-.result-summary__title { margin: 0 0 var(--step); font-size: 1rem; }
+.result-summary__title { margin: 0 0 var(--step); }
 .result-summary__row {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: .75rem;
-	padding: var(--step) calc(var(--step) * 1.5);
+	padding: calc(var(--step) * 1.5);
 	background: var(--stock);
 	border: 1px solid var(--grid);
 	border-radius: var(--radius);
 }
-.result-summary .outcome__answer { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.result-summary .outcome__answer { margin: 0; min-width: 0; font-size: 1rem; overflow-wrap: anywhere; }
 .result-summary .tex { white-space: normal; }
 .result-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .result-actions button:disabled { opacity: .6; cursor: default; }

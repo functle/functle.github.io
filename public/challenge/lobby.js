@@ -1,4 +1,4 @@
-import { mountBoard } from './game/match.js?v=answer-box';
+import { mountBoard } from './game/match.js?v=answer-row-style';
 import { readRoomInvite } from './room-invite.js';
 import { roomPath, validRoomCode } from './room-code.js';
 
@@ -14,6 +14,7 @@ const roomLink = (id) => onPages ? lobbyPath + '?room=' + id : '/challenge/' + i
 const seatKey = (id) => 'functle:seat:' + id;
 el('create-another').href = lobbyPath;
 el('create-after-match').href = lobbyPath;
+el('leave-after-match').href = lobbyPath;
 const roomApi = code && '/api/rooms/' + code;
 let socket;
 let you;
@@ -52,7 +53,7 @@ function updateSubmit() {
 
 function drawMatch(view) {
 	const finished = view.phase === 'finished';
-	el('clock').hidden = finished;
+	el('match-controls').hidden = finished;
 	let verdict = '';
 	if (finished) {
 		const { reason, winner } = view.result;
@@ -92,13 +93,14 @@ async function api(path, body, seat = onPages && code ? localStorage.getItem(sea
 
 function form(joining) {
 	el('title').textContent = joining ? 'Join a challenge' : 'Create a challenge';
+	el('title').hidden = false;
 	el('status').textContent = joining ? 'Choose a name to join your friend.' : 'Create a room to get a code and an invite link.';
 	el('submit').textContent = joining ? 'Join room' : 'Create room';
 	el('entry').hidden = false;
 	el('find-room').hidden = joining;
 	el('room').hidden = true;
 	el('create-another').hidden = true;
-	el('create-after-match').hidden = true;
+	el('match-result-links').hidden = true;
 	renderBoard(null);
 }
 
@@ -106,18 +108,20 @@ function unavailable(message) {
 	clearTimeout(retryTimer);
 	currentView = undefined;
 	el('title').textContent = 'Challenge lobby';
+	el('title').hidden = false;
 	el('status').textContent = message;
 	el('entry').hidden = true;
 	el('find-room').hidden = false;
 	el('room').hidden = true;
 	el('feedback').textContent = '';
 	el('create-another').hidden = false;
-	el('create-after-match').hidden = true;
+	el('match-result-links').hidden = true;
 	renderBoard(null);
 }
 
 function draw(view) {
-	const inMatch = view.phase === 'playing' || view.phase === 'finished';
+	const finished = view.phase === 'finished';
+	const inMatch = view.phase === 'playing' || finished;
 	if (view.phase !== currentView?.phase) {
 		el('feedback').textContent = '';
 
@@ -127,14 +131,14 @@ function draw(view) {
 	el('entry').hidden = true;
 	el('find-room').hidden = true;
 	el('room').hidden = false;
-	el('title').textContent = inMatch ? (view.result ? 'Match result' : 'Challenge match') : 'Challenge lobby';
+	el('title').textContent = inMatch ? (finished ? 'Match result' : 'Challenge match') : 'Challenge lobby';
+	el('title').hidden = inMatch;
 	el('sharing').hidden = inMatch;
 	el('match').hidden = !inMatch;
 	el('title').parentElement.classList.toggle('playing', inMatch);
-	el('ready').hidden = inMatch;
-	el('leave').textContent = view.phase === 'playing' ? 'Forfeit match' : 'Leave room';
+	el('room-actions').hidden = inMatch;
 	el('create-another').hidden = true;
-	el('create-after-match').hidden = view.phase !== 'finished';
+	el('match-result-links').hidden = !finished;
 	el('invite').value = location.origin + roomLink(code);
 	el('room-code').textContent = code.toUpperCase().match(/.{4}/g).join('-');
 	const rows = [1, 2].map((number) => {
@@ -282,7 +286,7 @@ function leaveFinishedRoom() {
 	location.replace(lobbyPath);
 }
 
-el('leave').onclick = async () => {
+async function leaveRoom() {
 	if (currentView?.phase === 'finished') return leaveFinishedRoom();
 	if (currentView?.phase === 'playing' && !confirm('Forfeit this match? Your opponent will win.')) return;
 	try {
@@ -294,6 +298,14 @@ el('leave').onclick = async () => {
 	} catch (error) {
 		el('feedback').textContent = error.message;
 	}
+}
+
+el('leave').onclick = leaveRoom;
+el('forfeit').onclick = leaveRoom;
+el('leave-after-match').onclick = (event) => {
+	if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+	event.preventDefault();
+	leaveFinishedRoom();
 };
 
 async function deliver(guess) {
