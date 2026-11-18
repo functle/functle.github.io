@@ -1,4 +1,5 @@
 import { mountBoard } from './game/match.js';
+import { readRoomInvite } from './room-invite.js';
 
 const el = (id) => document.getElementById(id);
 const configuredApi = document.querySelector('meta[name="challenge-api"]').content;
@@ -82,9 +83,10 @@ async function api(path, body, seat = onPages && code ? localStorage.getItem(sea
 
 function form(joining) {
 	el('title').textContent = joining ? 'Join a challenge' : 'Create a challenge';
-	el('status').textContent = joining ? 'Choose a name to join your friend.' : 'Create a room to get an invite link.';
+	el('status').textContent = joining ? 'Choose a name to join your friend.' : 'Create a room to get a code and an invite link.';
 	el('submit').textContent = joining ? 'Join room' : 'Create room';
 	el('entry').hidden = false;
+	el('find-room').hidden = joining;
 	el('room').hidden = true;
 	el('create-another').hidden = true;
 }
@@ -95,6 +97,7 @@ function unavailable(message) {
 	el('title').textContent = 'Challenge lobby';
 	el('status').textContent = message;
 	el('entry').hidden = true;
+	el('find-room').hidden = false;
 	el('room').hidden = true;
 	el('feedback').textContent = '';
 	el('create-another').hidden = false;
@@ -109,6 +112,7 @@ function draw(view) {
 	currentView = view;
 	serverOffset = view.serverNow - Date.now();
 	el('entry').hidden = true;
+	el('find-room').hidden = true;
 	el('room').hidden = false;
 	el('title').textContent = inMatch ? (view.result ? 'Match result' : 'Challenge match') : 'Challenge lobby';
 	el('sharing').hidden = inMatch;
@@ -119,6 +123,7 @@ function draw(view) {
 	el('leave').textContent = inMatch ? 'Forfeit match' : 'Leave room';
 	el('create-another').hidden = view.phase !== 'finished';
 	el('invite').value = location.origin + roomLink(code);
+	el('room-code').textContent = code.toUpperCase().match(/.{4}/g).join('-');
 	const rows = [1, 2].map((number) => {
 		const player = view.players.find((item) => item.number === number);
 		const row = document.createElement('li');
@@ -154,7 +159,7 @@ function draw(view) {
 	el('ready').setAttribute('aria-pressed', String(myReady));
 	el('ready').disabled = socket?.readyState !== WebSocket.OPEN;
 	if (view.phase === 'countdown') updateTime();
-	else if (view.players.length < 2) el('status').textContent = 'Share the invite link with a friend.';
+	else if (view.players.length < 2) el('status').textContent = 'Share the room code or invite link with a friend.';
 	else if (view.players.every((player) => player.connected && player.ready)) el('status').textContent = 'Both players are ready.';
 	else el('status').textContent = 'Waiting for both players to be ready.';
 }
@@ -205,6 +210,19 @@ async function load() {
 		else reconnect();
 	}
 }
+
+el('room-invite').oninput = (event) => event.target.setCustomValidity('');
+el('find-room').onsubmit = (event) => {
+	event.preventDefault();
+	const input = el('room-invite');
+	const id = readRoomInvite(input.value, location.origin, apiOrigin, lobbyPath);
+	if (!id) {
+		input.setCustomValidity('Enter a 12-character room code or a Functle room invite link.');
+		input.reportValidity();
+		return;
+	}
+	location.assign(roomLink(id));
+};
 
 el('entry').onsubmit = async (event) => {
 	event.preventDefault();

@@ -19,14 +19,21 @@
 		<section aria-labelledby="title">
 			<h2 id="title">Challenge lobby</h2>
 			<p id="status" role="status">Opening lobby…</p>
-			<form id="entry" hidden>
+			<form id="entry" class="lobby-form" hidden>
 				<label for="name">Your display name</label>
 				<input id="name" name="name" autocomplete="nickname" maxlength="32" required>
 				<button id="submit">Create room</button>
 			</form>
+			<form id="find-room" class="lobby-form" aria-labelledby="join-title" hidden>
+				<h3 id="join-title">Join a room</h3>
+				<label for="room-invite">Room code or lobby link</label>
+				<input id="room-invite" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+				<button>Continue</button>
+			</form>
 			<div id="room" hidden>
 				<div id="sharing">
 					<p>Six guesses each. Five minutes. The first player to solve the graph wins.</p>
+					<p>Room code <strong id="room-code"></strong></p>
 					<label for="invite">Invite link</label>
 					<div class="invite">
 						<input id="invite" readonly>

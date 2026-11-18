@@ -1,13 +1,15 @@
 section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: var(--stock); border: 1px solid var(--grid); border-radius: var(--radius); }
 #title { font-size: 1.3rem; margin: 0; }
 #status { color: var(--ink-soft); }
-#entry label, #sharing label { display: block; margin-bottom: .35rem; font-weight: 600; }
-#name, #invite, #entry button, .invite button, .actions button { font: inherit; border-radius: var(--radius); min-height: 2.75rem; }
-#name, #invite { min-width: 0; width: 100%; border: 1px solid var(--axis); padding: .5rem .65rem; color: inherit; }
-#entry button, .actions button, .invite button { background: var(--plot); border: 1px solid var(--plot); color: white; font-weight: 600; padding: .4rem .9rem; cursor: pointer; }
-.actions button:disabled, #entry button:disabled { opacity: .6; cursor: default; }
+.lobby-form label, #sharing label { display: block; margin-bottom: .35rem; font-weight: 600; }
+.lobby-form input, #invite, .lobby-form button, .invite button, .actions button { font: inherit; border-radius: var(--radius); min-height: 2.75rem; }
+.lobby-form input, #invite { min-width: 0; width: 100%; border: 1px solid var(--axis); padding: .5rem .65rem; color: inherit; }
+.lobby-form button, .actions button, .invite button { background: var(--plot); border: 1px solid var(--plot); color: white; font-weight: 600; padding: .4rem .9rem; cursor: pointer; }
+.actions button:disabled, .lobby-form button:disabled { opacity: .6; cursor: default; }
 .actions .secondary, .invite .secondary { background: white; color: var(--plot); border-color: var(--grid); }
-#entry button { margin-top: 1rem; }
+.lobby-form button { margin-top: 1rem; }
+#find-room { border-top: 1px solid var(--grid); margin-top: 1.25rem; }
+#room-code { font-family: var(--font-math); }
 .invite, .actions { display: flex; gap: .5rem; }
 .invite button { flex-shrink: 0; }
 #players { list-style: none; margin: 1.5rem 0; padding: 0; }
