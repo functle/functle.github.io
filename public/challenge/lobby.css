@@ -14,8 +14,9 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 #players li { padding: .7rem 0; border-top: 1px solid var(--grid); display: flex; gap: .75rem; justify-content: space-between; align-items: center; }
 #players li:last-child { border-bottom: 1px solid var(--grid); }
 #players strong, #board h3 { overflow-wrap: anywhere; }
-#players span { text-align: right; font-size: .875rem; color: var(--ink-soft); }
+#players li > span { text-align: right; font-size: .875rem; color: var(--ink-soft); }
 #players .ready { color: var(--hit); }
+#players .offline { color: #b3261e; }
 #feedback:empty, #status:empty { display: none; }
 #create-another { color: var(--plot); }
 .playing #players { margin: .5rem 0; }

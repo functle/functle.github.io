@@ -126,9 +126,19 @@ function draw(view) {
 		name.textContent = player ? player.name + (number === you ? ' (you)' : '') : 'Open seat';
 		const state = document.createElement('span');
 		if (player) {
-			state.textContent = inMatch ? (player.connected ? 'Connected' : 'Offline') + ' · ' + player.used + '/' + view.maxGuesses + ' guesses'
-				: player.connected ? (player.ready ? 'Connected · Ready' : 'Connected · Not ready') : 'Offline';
-			if (player.ready && player.connected) state.className = 'ready';
+			if (inMatch) {
+				state.textContent = player.used + '/' + view.maxGuesses + ' guesses';
+			} else if (player.connected) {
+				state.textContent = player.ready ? 'Ready' : 'Not ready';
+			}
+			if (!player.connected) {
+				const offline = document.createElement('span');
+				offline.className = 'offline';
+				offline.textContent = 'Offline';
+				state.prepend(offline, inMatch ? ' · ' : '');
+			} else if (player.ready) {
+				state.className = 'ready';
+			}
 		}
 		row.append(name, state);
 		return row;
