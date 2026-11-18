@@ -1,14 +1,14 @@
 import { mountBoard } from './game/match.js';
 import { readRoomInvite } from './room-invite.js';
+import { roomPath, validRoomCode } from './room-code.js';
 
 const el = (id) => document.getElementById(id);
 const configuredApi = document.querySelector('meta[name="challenge-api"]').content;
 const local = ['localhost', '127.0.0.1'].includes(location.hostname);
 const apiOrigin = configuredApi ? (local ? 'http://' + location.hostname + ':8787' : configuredApi) : location.origin;
 const onPages = apiOrigin !== location.origin;
-const roomCode = /^[a-f0-9]{12}$/;
 const requestedCode = new URLSearchParams(location.search).get('room');
-const code = onPages ? requestedCode : location.pathname.match(/^\/challenge\/([a-f0-9]{12})\/?$/)?.[1];
+const code = (onPages ? requestedCode : roomPath.exec(location.pathname)?.[1])?.toLowerCase();
 const lobbyPath = onPages ? new URL('.', import.meta.url).pathname : '/challenge';
 const roomLink = (id) => onPages ? lobbyPath + '?room=' + id : '/challenge/' + id;
 const seatKey = (id) => 'functle:seat:' + id;
@@ -196,7 +196,7 @@ function connect() {
 }
 
 async function load() {
-	if (onPages && requestedCode !== null && !roomCode.test(requestedCode)) return unavailable('Invalid room invite.');
+	if (onPages && requestedCode !== null && !validRoomCode.test(requestedCode)) return unavailable('Invalid room invite.');
 	if (!code) return form(false);
 	try {
 		const view = await api(roomApi);
@@ -217,7 +217,7 @@ el('find-room').onsubmit = (event) => {
 	const input = el('room-invite');
 	const id = readRoomInvite(input.value, location.origin, apiOrigin, lobbyPath);
 	if (!id) {
-		input.setCustomValidity('Enter a 12-character room code or a Functle room invite link.');
+		input.setCustomValidity('Enter a 4-character room code or a Functle room invite link.');
 		input.reportValidity();
 		return;
 	}

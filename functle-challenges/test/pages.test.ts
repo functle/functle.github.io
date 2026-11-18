@@ -22,7 +22,15 @@ it('accepts a Pages seat without a third-party cookie', async () => {
 	expect(response.status).toBe(201);
 	expect(response.headers.get('Access-Control-Allow-Origin')).toBe(pages);
 	expect(response.headers.has('Set-Cookie')).toBe(false);
-	expect(await response.json()).toEqual({ code: expect.stringMatching(/^[a-f0-9]{12}$/) });
+	expect(await response.json()).toEqual({ code: expect.stringMatching(/^[a-hj-np-z2-9]{4}$/) });
+});
+
+it('retries when the generated code already belongs to another room', async () => {
+	create.mockClear();
+	create.mockResolvedValueOnce(false);
+	const response = await createRoom(pages, { Authorization: 'Bearer ' + credential });
+	expect(response.status).toBe(201);
+	expect(create).toHaveBeenCalledTimes(2);
 });
 
 it('keeps the Worker cookie separate from Pages sessions', async () => {

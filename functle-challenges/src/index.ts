@@ -1,8 +1,11 @@
 // Keep the class export used by the starter's SQLite migration.
 export { ChallengeRoom as MyDurableObject } from './room';
 
-const roomRoute = /^\/api\/rooms\/([a-f0-9]{12})(?:\/(join|socket|leave|guess))?$/;
-const lobbyPage = /^\/challenge(?:\/[a-f0-9]{12})?\/?$/;
+import { roomCodePattern, roomPath } from '../../public/challenge/room-code.js';
+
+const roomRoute = new RegExp('^/api/rooms/(' + roomCodePattern + ')(?:/(join|socket|leave|guess))?$');
+// 32 characters, omitting 0, 1, i and o. Each byte maps evenly to the alphabet.
+const codeAlphabet = 'abcdefghjklmnpqrstuvwxyz23456789';
 const pagesOrigin = 'https://functle.github.io';
 const seatId = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 
@@ -43,7 +46,7 @@ async function readName(request: Request) {
 
 async function handle(request: Request, env: Env, pages: boolean): Promise<Response> {
 	const url = new URL(request.url);
-	if (request.method === 'GET' && (url.pathname === '/' || lobbyPage.test(url.pathname))) {
+	if (request.method === 'GET' && (url.pathname === '/' || /^\/challenge\/?$/.test(url.pathname) || roomPath.test(url.pathname))) {
 		const page = await env.ASSETS.fetch(new URL('/', url));
 		return new HTMLRewriter()
 			.on('head', { element: (head) => { head.prepend('<base href="/">', { html: true }); } })
@@ -69,7 +72,7 @@ async function handle(request: Request, env: Env, pages: boolean): Promise<Respo
 		const credential = pages ? token! : crypto.randomUUID();
 		const hash = await hashToken(credential);
 		for (let attempt = 0; attempt < 3; attempt++) {
-			const code = crypto.randomUUID().replaceAll('-', '').slice(0, 12);
+			const code = Array.from(crypto.getRandomValues(new Uint8Array(4)), byte => codeAlphabet[byte % codeAlphabet.length]).join('');
 			if (await env.ROOMS.getByName(code).create(name, hash)) {
 				return json({ code }, 201, pages ? undefined : seatCookie(code, credential, url));
 			}
