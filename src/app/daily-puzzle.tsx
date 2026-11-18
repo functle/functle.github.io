@@ -20,7 +20,7 @@ export default function DailyPuzzle() {
       puzzleNavigation={
         <nav className="daily-navigation" aria-label="Play modes">
           <a href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/challenge/`}>
-            Challenge a friend (1v1)
+            Challenge a friend
           </a>
           <Link href="/archive">Play the archive</Link>
         </nav>

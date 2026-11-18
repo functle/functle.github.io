@@ -165,8 +165,9 @@ export default function GuessInput({
           </>
         ) : (
           <>
-            Expanded, intercept, and vertex forms work, e.g.{' '}
-            <TeX source="y = (x-1)(x-3)" /> or <TeX source="y = (x-2)^2-1" />.
+            Expanded, intercept, and vertex forms work.
+            <br />
+            e.g. <TeX source="y = (x-1)(x-3)" /> or <TeX source="y = (x-2)^2-1" />.
           </>
         )}
       </p>
