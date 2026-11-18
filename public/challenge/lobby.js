@@ -1,4 +1,4 @@
-import { mountBoard } from './game/match.js?v=answer-row-style';
+import { mountBoard } from './game/match.js?v=match-result-return';
 import { readRoomInvite } from './room-invite.js';
 import { roomPath, validRoomCode } from './room-code.js';
 
@@ -69,7 +69,7 @@ function drawMatch(view) {
 	}
 	el('status').textContent = finished ? '' : 'First to solve the graph wins.';
 	inputDisabled = disabled(view);
-	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess, onLeave: leaveFinishedRoom,
+	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess,
 		online: socket?.readyState === WebSocket.OPEN, onRematch: (accept) => {
 			if (socket?.readyState === WebSocket.OPEN) socket.send((accept ? 'rematch:' : 'cancel-rematch:') + view.startsAt);
 		} });

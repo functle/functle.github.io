@@ -1,6 +1,8 @@
 section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: var(--stock); border: 1px solid var(--grid); border-radius: var(--radius); }
 #title { font-size: 1.3rem; margin: 0; }
 #status { color: var(--ink-soft); }
+.masthead:has(+ section > #title[hidden]) { margin-bottom: 0; }
+#title[hidden] ~ #status { margin-top: 0; }
 .lobby-form label, #sharing label { display: block; margin-bottom: .35rem; font-weight: 600; }
 .lobby-form input, #invite, .lobby-form button, .invite button, .actions button { font: inherit; border-radius: var(--radius); min-height: 2.75rem; }
 .lobby-form input, #invite { min-width: 0; width: 100%; border: 1px solid var(--axis); padding: .5rem .65rem; color: inherit; }

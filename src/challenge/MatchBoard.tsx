@@ -29,7 +29,6 @@ export interface BoardProps {
   disabled: boolean;
   online: boolean;
   onRematch: (accept: boolean) => void;
-  onLeave: () => void;
   onGuess: (raw: string) => Promise<string | null>;
 }
 
@@ -41,7 +40,7 @@ function history(player: Player): Guess[] {
   });
 }
 
-export default function MatchBoard({ view, you, verdict, disabled, onGuess, online, onRematch, onLeave }: BoardProps) {
+export default function MatchBoard({ view, you, verdict, disabled, onGuess, online, onRematch }: BoardProps) {
   const [toggles, setToggles] = useState<Set<number>>(() => new Set());
   const outcome = useRef<HTMLDialogElement>(null);
   const resultButton = useRef<HTMLButtonElement>(null);
@@ -102,9 +101,8 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
               </button>
             )}
             <button type="button" className="outcome__share result-secondary" onClick={() => outcome.current?.close()}>
-              View board
+              Return
             </button>
-            <button type="button" className="outcome__share result-secondary" onClick={onLeave}>Leave room</button>
           </div>
           {view.rematch && <p className="outcome__next" role="status">
             {!opponent.connected ? `${opponent.name} is offline.`
