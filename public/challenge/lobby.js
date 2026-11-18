@@ -1,4 +1,4 @@
-import { mountBoard } from './game/match.js';
+import { mountBoard } from './game/match.js?v=result-dialog';
 import { readRoomInvite } from './room-invite.js';
 import { roomPath, validRoomCode } from './room-code.js';
 
