@@ -103,16 +103,18 @@ async function handle(request: Request, env: Env, pages: boolean): Promise<Respo
 		return json({ code });
 	}
 	if (action === 'leave' && request.method === 'POST') {
-		const state = await room.leave(hash);
+		const body = await request.json<{ startsAt?: number | null }>().catch(() => null);
+		const state = await room.leave(hash, body?.startsAt);
+		if (state === 'stale') return json({ error: 'The round changed. Try leaving again.' }, 409);
 		return json({ state }, 200, !pages && state === 'left' ? seatCookie(code, '', url, 0) : undefined);
 	}
 	if (action === 'guess' && request.method === 'POST') {
-		const body = await request.json<{ id?: unknown; raw?: unknown }>().catch(() => null);
+		const body = await request.json<{ id?: unknown; raw?: unknown; startsAt?: number }>().catch(() => null);
 		if (typeof body?.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(body.id) ||
 			typeof body.raw !== 'string' || !body.raw.trim() || body.raw.length > 512) {
 			return json({ error: 'Enter a function of up to 512 characters.' }, 400);
 		}
-		const result = await room.guess(hash, body.id, body.raw);
+		const result = await room.guess(hash, body.id, body.raw, body.startsAt);
 		return json(result, result.status);
 	}
 	if (action === 'socket' && isSocket && request.method === 'GET') {

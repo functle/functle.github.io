@@ -6,5 +6,5 @@ import '../styles.css';
 
 export function mountBoard(container: HTMLElement) {
   const root = createRoot(container);
-  return (props: BoardProps) => root.render(createElement(MatchBoard, props));
+  return (props: BoardProps) => root.render(createElement(MatchBoard, { ...props, key: props.view.startsAt }));
 }

@@ -13,9 +13,9 @@ export const RESULT_MS = 24 * 60 * 60_000;
 type Attempt = Guess & { id: string };
 export type Seat = { number: number; name: string; hash: string; ready: boolean; guesses?: Attempt[] };
 type Result = { reason: 'solved' | 'forfeit' | 'timeout' | 'exhausted'; winner: number | null };
-type Round = { startsAt: number; endsAt: number; answer?: Curve; result?: Result };
+type Round = { startsAt: number; endsAt: number; answer?: Curve; result?: Result; rematch?: number[] };
 // Rooms created by the original lobby have neither a round nor guess histories.
-export type Room = { seats: Seat[]; expiresAt: number; round?: Round };
+export type Room = { seats: Seat[]; expiresAt: number; round?: Round; previousAnswer?: Curve };
 
 export function phase(room: Room) {
 	if (!room.round) return 'waiting';
@@ -32,6 +32,31 @@ export function nextAlarm(room: Room) {
 export function startCountdown(room: Room, now: number) {
 	const startsAt = now + COUNTDOWN_MS;
 	room.round = { startsAt, endsAt: startsAt + MATCH_MS };
+}
+
+export function setRematch(room: Room, seat: Seat, startsAt: number, accept: boolean, now: number, bothOnline: boolean) {
+	const round = room.round;
+	if (!round?.result || round.startsAt !== startsAt || (accept && !bothOnline)) return false;
+	const votes = new Set(round.rematch);
+	if (votes.has(seat.number) === accept) return false;
+	if (accept) votes.add(seat.number);
+	else votes.delete(seat.number);
+	round.rematch = [...votes];
+	if (votes.size === 2) {
+		room.previousAnswer = round.answer;
+		for (const player of room.seats) {
+			delete player.guesses;
+			player.ready = true;
+		}
+		startCountdown(room, now);
+	}
+	return true;
+}
+
+// Older clients omitted the round timestamp. Their requests are valid only in the first game.
+export function matchesRound(room: Room, startsAt?: number | null) {
+	if (startsAt === undefined) return !room.previousAnswer;
+	return startsAt === (room.round?.startsAt ?? null);
 }
 
 export function cancelCountdown(room: Room, now: number) {
@@ -56,7 +81,8 @@ export function advance(room: Room, now: number) {
 	const round = room.round;
 	if (!round || round.result || now < nextAlarm(room)) return false;
 	if (!round.answer) {
-		do { round.answer = answerForSeed(crypto.randomUUID()); } while (!isPlayable(round.answer));
+		do { round.answer = answerForSeed(crypto.randomUUID()); }
+		while (!isPlayable(round.answer) || (room.previousAnswer && sameCurve(round.answer, room.previousAnswer)));
 	}
 	if (now >= round.endsAt) finish(room, round.endsAt, { reason: 'timeout', winner: null });
 	return true;
@@ -84,6 +110,7 @@ export function snapshot(room: Room, you: Seat, connected: (hash: string) => boo
 	const answer = round?.answer;
 	return {
 		phase: phase(room), serverNow: now, startsAt: round?.startsAt, endsAt: round?.endsAt,
+		rematch: round?.result ? round.rematch ?? [] : undefined,
 		expiresAt: room.expiresAt, maxGuesses: MAX_GUESSES,
 		players: room.seats.map((seat) => ({
 			number: seat.number, name: seat.name, ready: seat.ready, connected: connected(seat.hash),

@@ -62,7 +62,10 @@ function drawMatch(view) {
 	}
 	el('status').textContent = finished ? '' : 'First to solve the graph wins.';
 	inputDisabled = disabled(view);
-	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess });
+	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess,
+		online: socket?.readyState === WebSocket.OPEN, onRematch: (accept) => {
+			if (socket?.readyState === WebSocket.OPEN) socket.send((accept ? 'rematch:' : 'cancel-rematch:') + view.startsAt);
+		} });
 }
 
 async function api(path, body, seat = onPages && code ? localStorage.getItem(seatKey(code)) : null) {
@@ -168,6 +171,7 @@ function reconnect() {
 	el('ready').disabled = true;
 	el('feedback').textContent = 'Reconnecting…';
 	updateSubmit();
+	if (currentView?.phase === 'finished') drawMatch(currentView);
 	clearTimeout(retryTimer);
 	retryTimer = setTimeout(load, retryDelay);
 	retryDelay = Math.min(5000, retryDelay * 2);
@@ -261,7 +265,7 @@ el('copy').onclick = async () => {
 el('leave').onclick = async () => {
 	if (currentView?.phase === 'playing' && !confirm('Forfeit this match? Your opponent will win.')) return;
 	try {
-		const { state } = await api(roomApi + '/leave', {});
+		const { state } = await api(roomApi + '/leave', { startsAt: currentView?.startsAt ?? null });
 		if (state === 'left') {
 			if (onPages) localStorage.removeItem(seatKey(code));
 			location.replace(lobbyPath);
@@ -302,7 +306,7 @@ function sendPending() {
 
 function submitGuess(raw) {
 	if (!sessionStorage.getItem(pendingKey)) {
-		sessionStorage.setItem(pendingKey, JSON.stringify({ id: crypto.randomUUID(), raw }));
+		sessionStorage.setItem(pendingKey, JSON.stringify({ id: crypto.randomUUID(), raw, startsAt: currentView.startsAt }));
 	}
 	return sendPending();
 }

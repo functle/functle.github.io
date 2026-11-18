@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 
-import { advance, cancelCountdown, forfeit, LOBBY_MS, nextAlarm, phase, snapshot, startCountdown, submit, type Room } from './match';
+import { advance, cancelCountdown, forfeit, LOBBY_MS, matchesRound, nextAlarm, phase, setRematch, snapshot, startCountdown, submit, type Room } from './match';
 
 export class ChallengeRoom extends DurableObject<Env> {
 	private current(now = Date.now()): Room | undefined {
@@ -31,11 +31,12 @@ export class ChallengeRoom extends DurableObject<Env> {
 		return 'joined';
 	}
 
-	leave(hash: string) {
+	leave(hash: string, startsAt?: number | null) {
 		const now = Date.now();
 		const lobby = this.current(now);
 		const leaving = lobby?.seats.find((seat) => seat.hash === hash);
 		if (!lobby || !leaving) return 'left';
+		if (!matchesRound(lobby, startsAt)) return 'stale';
 		if (phase(lobby) === 'playing') {
 			forfeit(lobby, leaving, now);
 			this.save(lobby);
@@ -51,12 +52,13 @@ export class ChallengeRoom extends DurableObject<Env> {
 		return 'left';
 	}
 
-	guess(hash: string, id: string, raw: string) {
+	guess(hash: string, id: string, raw: string, startsAt?: number) {
 		const now = Date.now();
 		const room = this.current(now);
 		if (!room) return { error: 'This room has expired.', status: 410 };
 		const seat = room.seats.find((player) => player.hash === hash);
 		if (!seat) return { error: 'Join the room first.', status: 403 };
+		if (!matchesRound(room, startsAt)) return { error: 'This guess belongs to an earlier match.', status: 409 };
 		const before = seat.guesses?.length ?? 0;
 		const error = submit(room, seat, id, raw, now);
 		if (error) return { error, status: 409 };
@@ -90,6 +92,12 @@ export class ChallengeRoom extends DurableObject<Env> {
 		if (!lobby) return socket.close(4000, 'Room expired');
 		const [hash] = this.ctx.getTags(socket);
 		const seat = lobby.seats.find((player) => player.hash === hash);
+		const vote = typeof message === 'string' && /^(rematch|cancel-rematch):(\d+)$/.exec(message);
+		if (seat && vote) {
+			const bothOnline = lobby.seats.length === 2 && lobby.seats.every((player) => this.connected(player.hash));
+			if (setRematch(lobby, seat, Number(vote[2]), vote[1] === 'rematch', Date.now(), bothOnline)) this.save(lobby);
+			return;
+		}
 		if (!seat || (message !== 'ready' && message !== 'unready')) return socket.close(1008, 'Invalid lobby command');
 		if (phase(lobby) === 'playing' || phase(lobby) === 'finished') return;
 		seat.ready = message === 'ready';
@@ -105,6 +113,11 @@ export class ChallengeRoom extends DurableObject<Env> {
 		if (!lobby) return;
 		const [hash] = this.ctx.getTags(socket);
 		const seat = lobby.seats.find((player) => player.hash === hash);
+		if (seat && lobby.round?.result && !this.connected(hash, socket) &&
+			setRematch(lobby, seat, lobby.round.startsAt, false, Date.now(), false)) {
+			this.save(lobby, socket);
+			return;
+		}
 		if (seat && !this.connected(hash, socket) && seat.ready && !lobby.round?.answer) {
 			if (lobby.round) cancelCountdown(lobby, Date.now());
 			else seat.ready = false;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, cancelCountdown, COUNTDOWN_MS, forfeit, MATCH_MS, nextAlarm, phase, RESULT_MS, snapshot, startCountdown, submit, type Room } from '../src/match';
+import { advance, cancelCountdown, COUNTDOWN_MS, forfeit, matchesRound, MATCH_MS, nextAlarm, phase, RESULT_MS, setRematch, snapshot, startCountdown, submit, type Room } from '../src/match';
 
 function lobby(): Room {
 	return { expiresAt: 900_000, seats: [1, 2].map((number) => ({ number, name: 'Player ' + number, hash: 'seat-' + number, ready: true })) };
@@ -12,6 +12,46 @@ function playing() {
 }
 
 describe('two-player matches', () => {
+	it('keeps the result until both players accept, then starts a fresh match in their original seats', () => {
+		const room = playing();
+		const [one, two] = room.seats;
+		expect(setRematch(room, one, 0, true, 1, true)).toBe(false);
+		submit(room, one, 'miss', '0', 2);
+		submit(room, two, 'win', 'x^2', 3);
+		const previous = structuredClone(room.round!.answer);
+		expect(setRematch(room, one, 0, true, 4, true)).toBe(true);
+		expect(setRematch(room, one, 0, true, 5, true)).toBe(false);
+		const view = snapshot(room, two, () => true, 5);
+		expect(view.rematch).toEqual([1]);
+		expect(view.result?.winner).toBe(2);
+		expect(view.players[0].used).toBe(1);
+		expect(setRematch(room, two, 0, true, 6, true)).toBe(true);
+		const start = 6 + COUNTDOWN_MS;
+		expect(phase(room)).toBe('countdown');
+		expect(room.round?.endsAt).toBe(start + MATCH_MS);
+		expect(setRematch(room, two, 0, true, 7, true)).toBe(false);
+		expect(matchesRound(room, 0)).toBe(false);
+		expect(matchesRound(room)).toBe(false);
+		expect(matchesRound(room, start)).toBe(true);
+		advance(room, start);
+		expect(room.round?.answer).not.toEqual(previous);
+		expect(room.seats.map(s => s.hash)).toEqual(['seat-1', 'seat-2']);
+		expect(snapshot(room, one, () => true, start).players.map(p => p.used)).toEqual([0, 0]);
+		expect(submit(room, two, 'next', '1', start)).toBeUndefined();
+	});
+
+	it('lets a player withdraw and rejects offline or outdated rematch requests', () => {
+		const room = playing();
+		advance(room, MATCH_MS);
+		const [one, two] = room.seats;
+		setRematch(room, one, 0, true, MATCH_MS, true);
+		setRematch(room, one, 0, false, MATCH_MS, false);
+		expect(setRematch(room, two, 0, true, MATCH_MS, false)).toBe(false);
+		expect(setRematch(room, two, 1, true, MATCH_MS, true)).toBe(false);
+		expect(room.round?.rematch).toEqual([]);
+		expect(room.round?.result?.reason).toBe('timeout');
+	});
+
 	it('starts on the scheduled boundary, including after storage is reloaded', () => {
 		const room = lobby();
 		startCountdown(room, 1000);
