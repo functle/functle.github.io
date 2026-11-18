@@ -80,14 +80,16 @@ export default function MatchBoard({ view, you, verdict, disabled, onGuess, onli
     <CurvePlot plot={view.graph} ghosts={ghosts} />
     {finished ? (
       <>
-        <button type="button" className="outcome__share result-secondary result-reopen" ref={resultButton}
-          aria-haspopup="dialog" aria-live="polite" onClick={() => outcome.current?.showModal()}>
-          {offered && !requested ? 'View rematch offer' : 'View result'}
-        </button>
+        <div className="result-summary">
+          <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
+          <button type="button" className="outcome__share result-secondary result-reopen" ref={resultButton}
+            aria-haspopup="dialog" aria-live="polite" onClick={() => outcome.current?.showModal()}>
+            {offered && !requested ? 'View rematch offer' : 'View result'}
+          </button>
+        </div>
         <dialog className="outcome result-dialog" ref={outcome} aria-labelledby="match-verdict"
           onClose={() => resultButton.current?.focus({ preventScroll: true })}>
           <h3 className="outcome__verdict" id="match-verdict">{verdict}</h3>
-          <p className="outcome__answer">{answer?.ok ? <TeX source={latexCurve(answer.curve)} /> : view.result?.answer}</p>
           <div className="result-actions">
             {view.rematch && (
               <button type="button" className="outcome__share" disabled={!online || (!requested && !opponent.connected)}

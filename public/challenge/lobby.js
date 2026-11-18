@@ -1,4 +1,4 @@
-import { mountBoard } from './game/match.js?v=compact-result-dialog';
+import { mountBoard } from './game/match.js?v=match-result-summary';
 import { readRoomInvite } from './room-invite.js';
 import { roomPath, validRoomCode } from './room-code.js';
 
@@ -55,10 +55,15 @@ function drawMatch(view) {
 	let verdict = '';
 	if (finished) {
 		const { reason, winner } = view.result;
-		const opponent = view.players.find((player) => player.number !== you);
-		verdict = winner === null
-			? (reason === 'timeout' ? 'Draw. Time is up.' : 'Draw. Both players used all six guesses.')
-			: (winner === you ? 'You won!' : opponent.name + ' won!') + (reason === 'forfeit' ? ' A player forfeited.' : '');
+		if (winner === you) {
+			verdict = 'You won!';
+		} else if (winner === null) {
+			verdict = reason === 'timeout' ? 'Draw. Time is up.' : 'Draw. Both players used all six guesses.';
+		} else {
+			const opponent = view.players.find((player) => player.number === winner);
+			verdict = opponent.name + ' won!';
+			if (reason === 'forfeit') verdict += ' A player forfeited.';
+		}
 	}
 	el('status').textContent = finished ? '' : 'First to solve the graph wins.';
 	inputDisabled = disabled(view);

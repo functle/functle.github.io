@@ -33,10 +33,23 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 	color: var(--ink);
 }
 .result-dialog::backdrop { background: rgb(18 48 61 / .4); }
-.result-dialog .outcome__verdict, .result-dialog .outcome__answer { overflow-wrap: anywhere; }
-.result-dialog .tex { white-space: normal; }
+.result-dialog .outcome__verdict {
+	margin-bottom: .875rem;
+	font-size: 1.5rem;
+	line-height: 1.2;
+	overflow-wrap: anywhere;
+}
+.result-summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: .75rem;
+	margin-top: 1rem;
+}
+.result-summary .outcome__answer { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.result-summary .tex { white-space: normal; }
 .result-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .result-actions button:disabled { opacity: .6; cursor: default; }
 .result-secondary { background: var(--stock); color: var(--plot); border-color: var(--grid); }
-.result-reopen { margin-top: 1rem; }
+.result-reopen { margin-inline-start: auto; }
 .outcome__next:empty { display: none; }
