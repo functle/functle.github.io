@@ -1,0 +1,33 @@
+:root {
+	color-scheme: light;
+	font: 100%/1.5 'IBM Plex Sans', system-ui, sans-serif;
+	color: #12303d;
+	background: #f2f5f7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 34rem; margin: 2rem auto; padding: 0 1rem; }
+h1, h2 { margin: 0; line-height: 1.2; }
+h1 { font: 600 2rem/1.2 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: -0.03em; }
+header p { margin: 0.25rem 0 1.5rem; color: #4a6672; }
+section { padding: 1.25rem; background: white; border: 1px solid #cfdde2; border-radius: 3px; }
+h2 { font-size: 1.3rem; }
+#status { color: #4a6672; }
+label { display: block; margin-bottom: 0.35rem; font-weight: 600; }
+input, button { font: inherit; border-radius: 3px; min-height: 2.75rem; }
+input { min-width: 0; width: 100%; border: 1px solid #758b95; padding: 0.5rem 0.65rem; color: inherit; }
+button { background: #0f4c66; border: 1px solid #0f4c66; color: white; font-weight: 600; padding: 0.4rem 0.9rem; cursor: pointer; }
+button:disabled { opacity: 0.6; cursor: default; }
+.secondary { background: white; color: #0f4c66; border-color: #a9bdc6; }
+:focus-visible { outline: 2px solid #0f4c66; outline-offset: 2px; }
+form button { margin-top: 1rem; }
+.invite, .actions { display: flex; gap: 0.5rem; }
+.invite button { flex-shrink: 0; }
+ul { list-style: none; margin: 1.5rem 0; padding: 0; }
+li { padding: 0.7rem 0; border-top: 1px solid #cfdde2; display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; }
+li:last-child { border-bottom: 1px solid #cfdde2; }
+li strong { overflow-wrap: anywhere; }
+li span { text-align: right; font-size: 0.875rem; color: #4a6672; }
+li .ready { color: #1c7a52; }
+#feedback:empty { display: none; }
+a { color: #0f4c66; }

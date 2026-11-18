@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Challenge a friend · Functle</title>
+	<link rel="stylesheet" href="/lobby.css">
+	<script type="module" src="/lobby.js"></script>
+</head>
+<body>
+	<main>
+		<header>
+			<h1>Functle</h1>
+			<p>Challenge a friend</p>
+		</header>
+		<section aria-labelledby="title">
+			<h2 id="title">Challenge lobby</h2>
+			<p id="status" role="status">Opening lobby…</p>
+			<form id="entry" hidden>
+				<label for="name">Your display name</label>
+				<input id="name" name="name" autocomplete="nickname" maxlength="32" required>
+				<button id="submit">Create room</button>
+			</form>
+			<div id="room" hidden>
+				<label for="invite">Invite link</label>
+				<div class="invite">
+					<input id="invite" readonly>
+					<button id="copy" class="secondary">Copy link</button>
+				</div>
+				<ul id="players" aria-label="Players"></ul>
+				<div class="actions">
+					<button id="ready" disabled aria-pressed="false">Ready</button>
+					<button id="leave" class="secondary">Leave room</button>
+				</div>
+			</div>
+			<p id="feedback" role="status"></p>
+			<a id="create-another" href="/challenge" hidden>Create a new room</a>
+		</section>
+	</main>
+</body>
+</html>
