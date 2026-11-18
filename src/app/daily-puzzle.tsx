@@ -18,7 +18,7 @@ export default function DailyPuzzle() {
       puzzle={puzzle}
       storageKey={storageKey}
       puzzleNavigation={
-        <a className="challenge-link" href="https://functle-challenges.zh0ngy0925.workers.dev/challenge">
+        <a className="challenge-link" href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/challenge/`}>
           Challenge a friend (1v1)
         </a>
       }

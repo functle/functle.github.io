@@ -1,7 +1,17 @@
 import { renderGraph } from './graph.js';
 
 const el = (id) => document.getElementById(id);
-const code = location.pathname.match(/^\/challenge\/([a-f0-9]{12})\/?$/)?.[1];
+const configuredApi = document.querySelector('meta[name="challenge-api"]').content;
+const local = ['localhost', '127.0.0.1'].includes(location.hostname);
+const apiOrigin = configuredApi ? (local ? 'http://' + location.hostname + ':8787' : configuredApi) : location.origin;
+const onPages = apiOrigin !== location.origin;
+const roomCode = /^[a-f0-9]{12}$/;
+const requestedCode = new URLSearchParams(location.search).get('room');
+const code = onPages ? requestedCode : location.pathname.match(/^\/challenge\/([a-f0-9]{12})\/?$/)?.[1];
+const lobbyPath = onPages ? new URL('.', import.meta.url).pathname : '/challenge';
+const roomLink = (id) => onPages ? lobbyPath + '?room=' + id : '/challenge/' + id;
+const seatKey = (id) => 'functle:seat:' + id;
+el('create-another').href = lobbyPath;
 const roomApi = code && '/api/rooms/' + code;
 let socket;
 let you;
@@ -76,13 +86,17 @@ function drawMatch(view) {
 	updateTime();
 }
 
-async function api(path, body) {
+async function api(path, body, seat = onPages && code ? localStorage.getItem(seatKey(code)) : null) {
 	const options = body === undefined ? {} : {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body),
 	};
-	const response = await fetch(path, { ...options, cache: 'no-store' });
+	const headers = new Headers(options.headers);
+	if (seat) headers.set('Authorization', 'Bearer ' + seat);
+	const response = await fetch(new URL(path, apiOrigin), {
+		...options, headers, cache: 'no-store', credentials: onPages ? 'omit' : 'same-origin',
+	});
 	const result = await response.json();
 	if (!response.ok) throw Object.assign(new Error(result.error), { status: response.status });
 	return result;
@@ -125,7 +139,7 @@ function draw(view) {
 	el('leave').hidden = view.phase === 'finished';
 	el('leave').textContent = inMatch ? 'Forfeit match' : 'Leave room';
 	el('create-another').hidden = view.phase !== 'finished';
-	el('invite').value = location.origin + '/challenge/' + code;
+	el('invite').value = location.origin + roomLink(code);
 	const rows = [1, 2].map((number) => {
 		const player = view.players.find((item) => item.number === number);
 		const row = document.createElement('li');
@@ -162,9 +176,9 @@ function reconnect() {
 }
 
 function connect() {
-	const url = new URL(roomApi + '/socket', location.origin);
-	url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-	socket = new WebSocket(url);
+	const url = new URL(roomApi + '/socket', apiOrigin);
+	url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+	socket = onPages ? new WebSocket(url, ['functle', 'seat.' + localStorage.getItem(seatKey(code))]) : new WebSocket(url);
 	socket.onopen = () => {
 		el('feedback').textContent = '';
 		void sendPending();
@@ -181,6 +195,7 @@ function connect() {
 }
 
 async function load() {
+	if (onPages && requestedCode !== null && !roomCode.test(requestedCode)) return unavailable('Invalid room invite.');
 	if (!code) return form(false);
 	try {
 		const view = await api(roomApi);
@@ -200,8 +215,11 @@ el('entry').onsubmit = async (event) => {
 	el('submit').disabled = true;
 	el('feedback').textContent = '';
 	try {
-		const result = await api(code ? roomApi + '/join' : '/api/rooms', { name: el('name').value });
-		location.replace('/challenge/' + result.code);
+		const seat = onPages ? (code && localStorage.getItem(seatKey(code))) || crypto.randomUUID() : null;
+		if (seat && code) localStorage.setItem(seatKey(code), seat);
+		const result = await api(code ? roomApi + '/join' : '/api/rooms', { name: el('name').value }, seat);
+		if (seat) localStorage.setItem(seatKey(result.code), seat);
+		location.replace(roomLink(result.code));
 	} catch (error) {
 		if (error.status === 409 || error.status === 410) unavailable(error.message);
 		else el('feedback').textContent = error.message;
@@ -230,7 +248,10 @@ el('leave').onclick = async () => {
 	if (currentView?.phase === 'playing' && !confirm('Forfeit this match? Your opponent will win.')) return;
 	try {
 		const { state } = await api(roomApi + '/leave', {});
-		if (state === 'left') location.replace('/challenge');
+		if (state === 'left') {
+			if (onPages) localStorage.removeItem(seatKey(code));
+			location.replace(lobbyPath);
+		}
 	} catch (error) {
 		el('feedback').textContent = error.message;
 	}

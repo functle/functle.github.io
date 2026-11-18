@@ -80,7 +80,9 @@ export class ChallengeRoom extends DurableObject<Env> {
 		const [client, server] = Object.values(new WebSocketPair());
 		this.ctx.acceptWebSocket(server, [hash]);
 		this.broadcast(lobby);
-		return new Response(null, { status: 101, webSocket: client });
+		const headers = new Headers();
+		if (request.headers.get('Sec-WebSocket-Protocol') === 'functle') headers.set('Sec-WebSocket-Protocol', 'functle');
+		return new Response(null, { status: 101, webSocket: client, headers });
 	}
 
 	webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
