@@ -18,11 +18,13 @@ export default function DailyPuzzle() {
       puzzle={puzzle}
       storageKey={storageKey}
       puzzleNavigation={
-        <a className="challenge-link" href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/challenge/`}>
-          Challenge a friend (1v1)
-        </a>
+        <nav className="daily-navigation" aria-label="Play modes">
+          <a href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/challenge/`}>
+            Challenge a friend (1v1)
+          </a>
+          <Link href="/archive">Play the archive</Link>
+        </nav>
       }
-      rulesAction={<Link href="/archive">Play the archive</Link>}
     />
   );
 }

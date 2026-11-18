@@ -66,12 +66,14 @@ body {
   margin-bottom: calc(var(--step) * 3);
 }
 
-.challenge-link {
-  display: inline-block;
+.daily-navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   margin-top: var(--step);
 }
 
-.challenge-link,
+.daily-navigation a,
 .game-footer a,
 .archive-picker a {
   color: var(--plot);
