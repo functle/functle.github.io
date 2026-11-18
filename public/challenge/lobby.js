@@ -13,6 +13,7 @@ const lobbyPath = onPages ? new URL('.', import.meta.url).pathname : '/challenge
 const roomLink = (id) => onPages ? lobbyPath + '?room=' + id : '/challenge/' + id;
 const seatKey = (id) => 'functle:seat:' + id;
 el('create-another').href = lobbyPath;
+el('create-after-match').href = lobbyPath;
 const roomApi = code && '/api/rooms/' + code;
 let socket;
 let you;
@@ -97,6 +98,7 @@ function form(joining) {
 	el('find-room').hidden = joining;
 	el('room').hidden = true;
 	el('create-another').hidden = true;
+	el('create-after-match').hidden = true;
 	renderBoard(null);
 }
 
@@ -110,6 +112,7 @@ function unavailable(message) {
 	el('room').hidden = true;
 	el('feedback').textContent = '';
 	el('create-another').hidden = false;
+	el('create-after-match').hidden = true;
 	renderBoard(null);
 }
 
@@ -131,6 +134,7 @@ function draw(view) {
 	el('ready').hidden = inMatch;
 	el('leave').textContent = view.phase === 'playing' ? 'Forfeit match' : 'Leave room';
 	el('create-another').hidden = true;
+	el('create-after-match').hidden = view.phase !== 'finished';
 	el('invite').value = location.origin + roomLink(code);
 	el('room-code').textContent = code.toUpperCase().match(/.{4}/g).join('-');
 	const rows = [1, 2].map((number) => {

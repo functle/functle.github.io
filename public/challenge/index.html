@@ -7,8 +7,8 @@
 	<meta name="challenge-api" content="https://functle-challenges.zh0ngy0925.workers.dev">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 	<link rel="stylesheet" href="./game/match.css">
-	<link rel="stylesheet" href="./lobby.css?v=answer-box">
-	<script type="module" src="./lobby.js?v=answer-box"></script>
+	<link rel="stylesheet" href="./lobby.css?v=match-create-room-link">
+	<script type="module" src="./lobby.js?v=match-create-room-link"></script>
 </head>
 <body>
 	<main class="page">
@@ -18,6 +18,7 @@
 		</header>
 		<section aria-labelledby="title">
 			<h2 id="title">Challenge lobby</h2>
+			<a id="create-after-match" href="/challenge/" hidden>Create new room</a>
 			<p id="status" role="status">Opening lobby…</p>
 			<form id="entry" class="lobby-form" hidden>
 				<label for="name">Your display name</label>

@@ -20,7 +20,7 @@ section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: v
 #players .ready { color: var(--hit); }
 #players .offline { color: #b3261e; }
 #feedback:empty, #status:empty { display: none; }
-#create-another { color: var(--plot); }
+#create-another, #create-after-match { color: var(--plot); }
 .playing #players { margin: .5rem 0; }
 .playing #players li { padding: .25rem 0; }
 .playing .actions { margin-top: 1rem; }
