@@ -22,12 +22,27 @@
 				<button id="submit">Create room</button>
 			</form>
 			<div id="room" hidden>
-				<label for="invite">Invite link</label>
-				<div class="invite">
-					<input id="invite" readonly>
-					<button id="copy" class="secondary">Copy link</button>
+				<div id="sharing">
+					<p>Six guesses each. Five minutes. The first player to solve the graph wins.</p>
+					<label for="invite">Invite link</label>
+					<div class="invite">
+						<input id="invite" readonly>
+						<button id="copy" class="secondary">Copy link</button>
+					</div>
 				</div>
 				<ul id="players" aria-label="Players"></ul>
+				<div id="match" hidden>
+					<p id="clock" role="timer"></p>
+					<div id="graph"></div>
+					<form id="guess-form">
+						<label for="guess">Your function</label>
+						<input id="guess" maxlength="512" placeholder="e.g. x^2 + 2x - 1" autocomplete="off" spellcheck="false" required>
+						<button id="send">Submit guess</button>
+					</form>
+					<p id="guess-feedback" role="status"></p>
+					<p id="answer"></p>
+					<div id="histories"></div>
+				</div>
 				<div class="actions">
 					<button id="ready" disabled aria-pressed="false">Ready</button>
 					<button id="leave" class="secondary">Leave room</button>

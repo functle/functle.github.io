@@ -275,8 +275,7 @@ export function vertexInView(curve: Curve): boolean {
   );
 }
 
-export function puzzleFor(when: Date = new Date()): Puzzle {
-  const key = dateKey(when);
+export function answerForSeed(key: string): Curve {
   const baseSeed = hashString(key);
 
   // Rejection sampling: perturb the seed until the curve is legible. Still
@@ -286,10 +285,14 @@ export function puzzleFor(when: Date = new Date()): Puzzle {
   for (let attempt = 1; attempt < 64 && !isPlayable(answer); attempt++) {
     answer = generateAnswer(shape, hashString(`${key}#${attempt}`));
   }
+  return answer;
+}
 
+export function puzzleFor(when: Date = new Date()): Puzzle {
+  const key = dateKey(when);
   return {
     number: daysBetween(FIRST_PUZZLE_DATE, key) + 1,
     dateKey: key,
-    answer,
+    answer: answerForSeed(key),
   };
 }

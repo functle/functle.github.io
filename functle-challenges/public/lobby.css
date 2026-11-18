@@ -31,3 +31,11 @@ li span { text-align: right; font-size: 0.875rem; color: #4a6672; }
 li .ready { color: #1c7a52; }
 #feedback:empty { display: none; }
 a { color: #0f4c66; }
+#graph svg { display: block; width: 100%; max-width: 25rem; margin: 1rem auto; border: 1px solid #cfdde2; overflow: hidden; }
+#graph text { fill: #415c67; font: 10px system-ui, sans-serif; }
+#graph .guide { stroke: #718695; stroke-dasharray: 5 4; }
+#clock { text-align: right; font-variant-numeric: tabular-nums; }
+#answer { font-weight: 600; }
+#histories ol { padding-left: 1.5rem; }
+#histories li { display: list-item; overflow-wrap: anywhere; }
+#histories small { display: block; color: #4a6672; }

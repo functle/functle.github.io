@@ -1,7 +1,7 @@
 // Keep the class export used by the starter's SQLite migration.
 export { ChallengeRoom as MyDurableObject } from './room';
 
-const roomRoute = /^\/api\/rooms\/([a-f0-9]{12})(?:\/(join|socket|leave))?$/;
+const roomRoute = /^\/api\/rooms\/([a-f0-9]{12})(?:\/(join|socket|leave|guess))?$/;
 const lobbyPage = /^\/challenge(?:\/[a-f0-9]{12})?\/?$/;
 
 function json(value: unknown, status = 200, cookie?: string) {
@@ -10,7 +10,7 @@ function json(value: unknown, status = 200, cookie?: string) {
 	return Response.json(value, { status, headers });
 }
 
-function seatCookie(code: string, token: string, url: URL, age = 900) {
+function seatCookie(code: string, token: string, url: URL, age = 2 * 24 * 60 * 60) {
 	const secure = url.protocol === 'https:' ? '; Secure' : '';
 	return `seat=${token}; Path=/api/rooms/${code}; HttpOnly; SameSite=Strict; Max-Age=${age}${secure}`;
 }
@@ -69,7 +69,7 @@ export default {
 			const credential = token ?? crypto.randomUUID();
 			const view = await room.inspect(await hashToken(credential));
 			if (!view) return json({ error: 'This invite has expired or does not exist.' }, 410);
-			return json(view, 200, !token && view.status === 'join' ? seatCookie(code, credential, url) : undefined);
+			return json(view, 200, view.status !== 'full' ? seatCookie(code, credential, url) : undefined);
 		}
 		if (!token) return json({ error: 'Open the invite link to join this room.' }, 403);
 		const hash = await hashToken(token);
@@ -82,8 +82,17 @@ export default {
 			return json({ code });
 		}
 		if (action === 'leave' && request.method === 'POST') {
-			await room.leave(hash);
-			return json({ ok: true }, 200, seatCookie(code, '', url, 0));
+			const state = await room.leave(hash);
+			return json({ state }, 200, state === 'left' ? seatCookie(code, '', url, 0) : undefined);
+		}
+		if (action === 'guess' && request.method === 'POST') {
+			const body = await request.json<{ id?: unknown; raw?: unknown }>().catch(() => null);
+			if (typeof body?.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(body.id) ||
+				typeof body.raw !== 'string' || !body.raw.trim() || body.raw.length > 512) {
+				return json({ error: 'Enter a function of up to 512 characters.' }, 400);
+			}
+			const result = await room.guess(hash, body.id, body.raw);
+			return json(result, result.status);
 		}
 		if (action === 'socket' && isSocket && request.method === 'GET') {
 			// Only this Worker can call the object. Replace any client-supplied credential header.
