@@ -12,6 +12,7 @@ dist
 dist-ssr
 .next/
 out/
+public/challenge/game/
 next-env.d.ts
 *.tsbuildinfo
 *.local

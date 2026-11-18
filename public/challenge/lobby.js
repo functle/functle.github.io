@@ -1,4 +1,4 @@
-import { renderGraph } from './graph.js';
+import { mountBoard } from './game/match.js';
 
 const el = (id) => document.getElementById(id);
 const configuredApi = document.querySelector('meta[name="challenge-api"]').content;
@@ -20,8 +20,9 @@ let retryDelay = 500;
 let retryTimer;
 let currentView;
 let serverOffset = 0;
-let graphStart;
-let sending = false;
+const renderBoard = mountBoard(el('board'));
+let inputDisabled = true;
+let delivery;
 const pendingKey = 'functle:pending:' + code;
 
 function updateTime() {
@@ -38,52 +39,29 @@ function updateTime() {
 	}
 }
 
+function disabled(view) {
+	return view.phase !== 'playing' || Date.now() + serverOffset >= view.endsAt ||
+		socket?.readyState !== WebSocket.OPEN || Boolean(delivery);
+}
+
 function updateSubmit() {
-	const view = currentView;
-	const me = view?.players.find((player) => player.number === you);
-	el('send').disabled = !me || view.phase !== 'playing' || me.used >= view.maxGuesses ||
-		Date.now() + serverOffset >= view.endsAt || socket?.readyState !== WebSocket.OPEN || sending;
+	if (currentView?.phase === 'playing' && inputDisabled !== disabled(currentView)) drawMatch(currentView);
 }
 
 function drawMatch(view) {
 	const finished = view.phase === 'finished';
 	el('clock').hidden = finished;
-	el('guess-form').hidden = finished;
-	el('answer').textContent = finished ? 'Answer: ' + view.result.answer : '';
-	if (graphStart !== view.startsAt) {
-		el('graph').replaceChildren(renderGraph(view.graph));
-		graphStart = view.startsAt;
-	}
-	const histories = [];
-	for (const player of view.players) {
-		if (!player.guesses || (!finished && !player.used)) continue;
-		const heading = document.createElement('h3');
-		heading.textContent = player.number === you ? 'Your guesses' : player.name + '’s guesses';
-		const list = document.createElement('ol');
-		for (const { raw, grade } of player.guesses) {
-			const item = document.createElement('li');
-			const hint = document.createElement('small');
-			hint.textContent = [grade.kindCorrect ? 'Correct family' : 'Different family', ...grade.cells.map(
-				(cell) => cell.name + ' = ' + cell.value + ' (' + (cell.state === 'unknown' ? 'ungraded' : cell.state) + ')'
-			)].join(' · ');
-			item.append(raw, hint);
-			list.append(item);
-		}
-		if (!player.used) heading.textContent += ' (0)';
-		histories.push(heading, list);
-	}
-	el('histories').replaceChildren(...histories);
-	const me = view.players.find((player) => player.number === you);
+	let verdict = '';
 	if (finished) {
 		const { reason, winner } = view.result;
 		const opponent = view.players.find((player) => player.number !== you);
-		el('status').textContent = winner === null
+		verdict = winner === null
 			? (reason === 'timeout' ? 'Draw. Time is up.' : 'Draw. Both players used all six guesses.')
 			: (winner === you ? 'You won!' : opponent.name + ' won!') + (reason === 'forfeit' ? ' A player forfeited.' : '');
-	} else {
-		el('status').textContent = me.used >= view.maxGuesses ? 'All six guesses used. Waiting for your opponent.' : 'First to solve the graph wins.';
 	}
-	updateTime();
+	el('status').textContent = finished ? '' : 'First to solve the graph wins.';
+	inputDisabled = disabled(view);
+	renderBoard({ view, you, verdict, disabled: inputDisabled, onGuess: submitGuess });
 }
 
 async function api(path, body, seat = onPages && code ? localStorage.getItem(seatKey(code)) : null) {
@@ -126,7 +104,7 @@ function draw(view) {
 	const inMatch = view.phase === 'playing' || view.phase === 'finished';
 	if (view.phase !== currentView?.phase) {
 		el('feedback').textContent = '';
-		el('guess-feedback').textContent = '';
+
 	}
 	currentView = view;
 	serverOffset = view.serverNow - Date.now();
@@ -135,6 +113,7 @@ function draw(view) {
 	el('title').textContent = inMatch ? (view.result ? 'Match result' : 'Challenge match') : 'Challenge lobby';
 	el('sharing').hidden = inMatch;
 	el('match').hidden = !inMatch;
+	el('title').parentElement.classList.toggle('playing', inMatch);
 	el('ready').hidden = inMatch;
 	el('leave').hidden = view.phase === 'finished';
 	el('leave').textContent = inMatch ? 'Forfeit match' : 'Leave room';
@@ -155,7 +134,11 @@ function draw(view) {
 		return row;
 	});
 	el('players').replaceChildren(...rows);
-	if (inMatch) return drawMatch(view);
+	if (inMatch) {
+		drawMatch(view);
+		updateTime();
+		return;
+	}
 	myReady = view.players.find((item) => item.number === you)?.ready ?? false;
 	el('ready').textContent = myReady ? 'Cancel ready' : 'Ready';
 	el('ready').setAttribute('aria-pressed', String(myReady));
@@ -181,7 +164,10 @@ function connect() {
 	socket = onPages ? new WebSocket(url, ['functle', 'seat.' + localStorage.getItem(seatKey(code))]) : new WebSocket(url);
 	socket.onopen = () => {
 		el('feedback').textContent = '';
-		void sendPending();
+		if (!delivery && sessionStorage.getItem(pendingKey)) {
+			// After a refresh the original input no longer exists to report a rejection.
+			void sendPending().then((reason) => { if (reason) el('feedback').textContent = reason; });
+		}
 	};
 	socket.onmessage = (event) => {
 		retryDelay = 500;
@@ -257,39 +243,41 @@ el('leave').onclick = async () => {
 	}
 };
 
-async function sendPending() {
-	const stored = sessionStorage.getItem(pendingKey);
-	if (!stored || sending) return;
-	sending = true;
-	updateSubmit();
-	const guess = JSON.parse(stored);
-	try {
-		await api(roomApi + '/guess', guess);
-		sessionStorage.removeItem(pendingKey);
-		el('guess').value = '';
-		el('guess-feedback').textContent = '';
-	} catch (error) {
-		if (error.status >= 400 && error.status < 500) {
-			sessionStorage.removeItem(pendingKey);
-			el('guess-feedback').textContent = error.message;
-		} else {
-			el('guess-feedback').textContent = 'Checking whether your guess arrived…';
-			setTimeout(sendPending, 1500);
+async function deliver(guess) {
+	for (;;) {
+		try {
+			await api(roomApi + '/guess', guess);
+			el('feedback').textContent = '';
+			return null;
+		} catch (error) {
+			if (error.status >= 400 && error.status < 500) {
+				el('feedback').textContent = '';
+				return error.message;
+			}
+			el('feedback').textContent = 'Checking whether your guess arrived…';
+			await new Promise((resolve) => setTimeout(resolve, 1500));
 		}
-	} finally {
-		sending = false;
-		updateSubmit();
 	}
 }
 
-el('guess-form').onsubmit = (event) => {
-	event.preventDefault();
-	if (el('send').disabled) return;
+function sendPending() {
+	const stored = sessionStorage.getItem(pendingKey);
+	if (!stored || delivery) return delivery;
+	delivery = deliver(JSON.parse(stored)).finally(() => {
+		sessionStorage.removeItem(pendingKey);
+		delivery = undefined;
+		updateSubmit();
+	});
+	updateSubmit();
+	return delivery;
+}
+
+function submitGuess(raw) {
 	if (!sessionStorage.getItem(pendingKey)) {
-		sessionStorage.setItem(pendingKey, JSON.stringify({ id: crypto.randomUUID(), raw: el('guess').value.trim() }));
+		sessionStorage.setItem(pendingKey, JSON.stringify({ id: crypto.randomUUID(), raw }));
 	}
-	void sendPending();
-};
+	return sendPending();
+}
 
 setInterval(updateTime, 250);
 void load();

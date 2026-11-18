@@ -92,7 +92,7 @@ export default function GuessRow({
             expression out, since a fraction read literally is noise. The
             colour name goes in too — it is the only way the row-to-curve link
             survives for someone not seeing the colour. */}
-        <span className="guess__expr" style={{ color: style.color }}>
+        <span className="guess__expr" style={{ color: style.color }} title={guess.raw}>
           <span aria-hidden="true">
             <TeX source={latexCurve(curve)} />
           </span>

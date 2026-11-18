@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "build:challenge": "vite build --config vite.challenge.config.ts",
+    "predev": "npm run build:challenge",
+    "prebuild": "npm run build:challenge",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -26,6 +29,7 @@
     "@types/react-dom": "^19.2.7",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
+    "vite": "8.3.8",
     "vitest": "^5.0.1"
   }
 }

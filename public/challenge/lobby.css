@@ -1,41 +1,24 @@
-:root {
-	color-scheme: light;
-	font: 100%/1.5 'IBM Plex Sans', system-ui, sans-serif;
-	color: #12303d;
-	background: #f2f5f7;
-}
-* { box-sizing: border-box; }
-body { margin: 0; }
-main { max-width: 34rem; margin: 2rem auto; padding: 0 1rem; }
-h1, h2 { margin: 0; line-height: 1.2; }
-h1 { font: 600 2rem/1.2 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: -0.03em; }
-header p { margin: 0.25rem 0 1.5rem; color: #4a6672; }
-section { padding: 1.25rem; background: white; border: 1px solid #cfdde2; border-radius: 3px; }
-h2 { font-size: 1.3rem; }
-#status { color: #4a6672; }
-label { display: block; margin-bottom: 0.35rem; font-weight: 600; }
-input, button { font: inherit; border-radius: 3px; min-height: 2.75rem; }
-input { min-width: 0; width: 100%; border: 1px solid #758b95; padding: 0.5rem 0.65rem; color: inherit; }
-button { background: #0f4c66; border: 1px solid #0f4c66; color: white; font-weight: 600; padding: 0.4rem 0.9rem; cursor: pointer; }
-button:disabled { opacity: 0.6; cursor: default; }
-.secondary { background: white; color: #0f4c66; border-color: #a9bdc6; }
-:focus-visible { outline: 2px solid #0f4c66; outline-offset: 2px; }
-form button { margin-top: 1rem; }
-.invite, .actions { display: flex; gap: 0.5rem; }
+section[aria-labelledby="title"]:not(.playing) { padding: 1.25rem; background: var(--stock); border: 1px solid var(--grid); border-radius: var(--radius); }
+#title { font-size: 1.3rem; margin: 0; }
+#status { color: var(--ink-soft); }
+#entry label, #sharing label { display: block; margin-bottom: .35rem; font-weight: 600; }
+#name, #invite, #entry button, .invite button, .actions button { font: inherit; border-radius: var(--radius); min-height: 2.75rem; }
+#name, #invite { min-width: 0; width: 100%; border: 1px solid var(--axis); padding: .5rem .65rem; color: inherit; }
+#entry button, .actions button, .invite button { background: var(--plot); border: 1px solid var(--plot); color: white; font-weight: 600; padding: .4rem .9rem; cursor: pointer; }
+.actions button:disabled, #entry button:disabled { opacity: .6; cursor: default; }
+.actions .secondary, .invite .secondary { background: white; color: var(--plot); border-color: var(--grid); }
+#entry button { margin-top: 1rem; }
+.invite, .actions { display: flex; gap: .5rem; }
 .invite button { flex-shrink: 0; }
-ul { list-style: none; margin: 1.5rem 0; padding: 0; }
-li { padding: 0.7rem 0; border-top: 1px solid #cfdde2; display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; }
-li:last-child { border-bottom: 1px solid #cfdde2; }
-li strong { overflow-wrap: anywhere; }
-li span { text-align: right; font-size: 0.875rem; color: #4a6672; }
-li .ready { color: #1c7a52; }
-#feedback:empty { display: none; }
-a { color: #0f4c66; }
-#graph svg { display: block; width: 100%; max-width: 25rem; margin: 1rem auto; border: 1px solid #cfdde2; overflow: hidden; }
-#graph text { fill: #415c67; font: 10px system-ui, sans-serif; }
-#graph .guide { stroke: #718695; stroke-dasharray: 5 4; }
+#players { list-style: none; margin: 1.5rem 0; padding: 0; }
+#players li { padding: .7rem 0; border-top: 1px solid var(--grid); display: flex; gap: .75rem; justify-content: space-between; align-items: center; }
+#players li:last-child { border-bottom: 1px solid var(--grid); }
+#players strong, #board h3 { overflow-wrap: anywhere; }
+#players span { text-align: right; font-size: .875rem; color: var(--ink-soft); }
+#players .ready { color: var(--hit); }
+#feedback:empty, #status:empty { display: none; }
+#create-another { color: var(--plot); }
+.playing #players { margin: .5rem 0; }
+.playing #players li { padding: .25rem 0; }
+.playing .actions { margin-top: 1rem; }
 #clock { text-align: right; font-variant-numeric: tabular-nums; }
-#answer { font-weight: 600; }
-#histories ol { padding-left: 1.5rem; }
-#histories li { display: list-item; overflow-wrap: anywhere; }
-#histories small { display: block; color: #4a6672; }

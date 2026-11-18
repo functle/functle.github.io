@@ -17,7 +17,7 @@ const GLYPH: Record<CellState, string> = {
 };
 
 export function buildShareText(
-  puzzleNumber: number,
+  puzzleNumber: number | '1v1',
   guesses: Guess[],
   won: boolean
 ): string {
@@ -26,7 +26,7 @@ export function buildShareText(
   // The type is not named: working it out is part of the puzzle now, and the
   // share goes to people who may not have played yet. Each row leads with a
   // type square instead.
-  const title = `Functle #${puzzleNumber} ${score}`;
+  const title = `Functle ${puzzleNumber === '1v1' ? '1v1' : '#' + puzzleNumber} ${score}`;
 
   const rows = guesses.map(
     (g) =>

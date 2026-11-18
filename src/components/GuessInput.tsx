@@ -28,7 +28,7 @@ interface GuessInputProps {
   /** Which guess slot this will become, so the preview can show its colour. */
   nextIndex: number;
   /** Returns null when accepted, or a reason to show the player when not. */
-  onGuess: (raw: string, curve: Curve) => string | null;
+  onGuess: (raw: string, curve: Curve) => string | null | Promise<string | null>;
 }
 
 export default function GuessInput({
@@ -70,11 +70,11 @@ export default function GuessInput({
     setTypeset(false);
   }
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
     if (disabled || !parsed) return;
 
-    const reason = onGuess(trimmed, parsed);
+    const reason = await onGuess(trimmed, parsed);
     setRejection(reason);
     // Keep the text when the guess bounced, so they can edit rather than retype.
     if (reason === null) {
@@ -96,7 +96,8 @@ export default function GuessInput({
             className={`entry__field ${typeset && parsed ? 'entry__field--typeset' : ''}`}
             value={text}
             onChange={(e) => change(e.target.value)}
-            disabled={disabled}
+            readOnly={disabled}
+            aria-disabled={disabled}
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"

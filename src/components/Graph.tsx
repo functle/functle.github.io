@@ -34,6 +34,22 @@ interface GraphProps {
 }
 
 export default function Graph({ curve, ghosts = [] }: GraphProps) {
+  const plot = {
+    paths: curveBranches(curve),
+    label: describeCurve(curve),
+    guides: curve.kind === 'rational' ? [sx(curve.h), sy(curve.k)] : undefined,
+  };
+  return <CurvePlot plot={plot} ghosts={ghosts} />;
+}
+
+export interface PlotData {
+  paths: string[];
+  label: string;
+  guides?: number[];
+}
+
+/** Challenges receive the plotted paths from the server. */
+export function CurvePlot({ plot, ghosts = [] }: { plot: PlotData; ghosts?: (Curve | null)[] }) {
   // Whole units get a line; every second one gets a number, so the labels have
   // room to breathe.
   const ticks: number[] = [];
@@ -44,7 +60,7 @@ export default function Graph({ curve, ghosts = [] }: GraphProps) {
       className="graph"
       viewBox={`${-SPAN - PAD} ${-SPAN - PAD} ${SIZE + PAD * 2} ${SIZE + PAD * 2}`}
       role="img"
-      aria-label={describeCurve(curve)}
+      aria-label={plot.label}
     >
       <defs>
         <clipPath id="plot-area">
@@ -101,10 +117,10 @@ export default function Graph({ curve, ghosts = [] }: GraphProps) {
           Guesses deliberately get no asymptote lines. Six of them would put
           twelve more lines on the grid and bury the two that describe the curve
           being solved for. */}
-      {curve.kind === 'rational' && (
+      {plot.guides && (
         <g className="graph__asymptotes" aria-hidden="true">
-          <line x1={sx(curve.h)} y1={-SPAN} x2={sx(curve.h)} y2={SPAN} />
-          <line x1={-SPAN} y1={sy(curve.k)} x2={SPAN} y2={sy(curve.k)} />
+          <line x1={plot.guides[0]} y1={-SPAN} x2={plot.guides[0]} y2={SPAN} />
+          <line x1={-SPAN} y1={plot.guides[1]} x2={SPAN} y2={plot.guides[1]} />
         </g>
       )}
 
@@ -132,7 +148,7 @@ export default function Graph({ curve, ghosts = [] }: GraphProps) {
             />
           ));
         })}
-        {curveBranches(curve).map((d, branch) => (
+        {plot.paths.map((d, branch) => (
           <path key={branch} className="graph__curve" d={d} />
         ))}
       </g>

@@ -6,6 +6,7 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "functle-challenges",
 	"main": "src/index.ts",
+	"build": { "command": "npm --prefix .. run build:challenge" },
 	"assets": { "directory": "../public/challenge", "binding": "ASSETS", "run_worker_first": ["/", "/challenge", "/challenge/*"] },
 	"compatibility_date": "2026-11-17",
 	"migrations": [

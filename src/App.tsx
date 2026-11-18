@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Graph from './components/Graph';
+import GameRules from './components/GameRules';
 import GuessInput from './components/GuessInput';
 import GuessRow from './components/GuessRow';
 import TeX from './components/TeX';
@@ -145,16 +146,7 @@ export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, r
       )}
 
       <footer className="game-footer">
-        <details className="rules">
-          <summary>How it works</summary>
-          {/* One line each, so the tall fraction gets a line to itself instead
-              of pushing a sentence apart mid-way. */}
-          <ul className="rules__lines">
-            <li>Guess the function on the graph in 6 tries.</li>
-            <li>It is either a polynomial or a rational function.</li>
-            <li>Green means a number is right. ↑ or ↓ shows which way to move it.</li>
-          </ul>
-        </details>
+        <GameRules />
         {rulesAction && <div className="game-footer__action">{rulesAction}</div>}
       </footer>
     </main>
