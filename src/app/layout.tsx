@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Functle - guess the function',
   description: 'A daily puzzle: read a graph and name the function behind it.',
   icons: {
-    icon: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/favicon.svg`,
+    icon: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/favicon.ico`,
   },
 };
 

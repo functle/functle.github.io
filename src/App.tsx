@@ -16,18 +16,20 @@ import { gradeGuess } from './lib/grade';
 import { MAX_GUESSES } from './lib/puzzle';
 import { buildShareText, copyToClipboard } from './lib/share';
 import { loadDay, saveDay } from './lib/storage';
+import { streakForResult, type Streak } from './lib/streak';
 import type { Curve, GameStatus, Guess, Puzzle } from './lib/types';
 
 interface AppProps {
   puzzle: Puzzle;
   /** Also use this as the React key to reset game state when switching puzzles. */
   storageKey: string;
+  priorStreak?: Streak;
   dateLabel?: string;
   puzzleNavigation?: ReactNode;
   rulesAction?: ReactNode;
 }
 
-export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, rulesAction }: AppProps) {
+export default function App({ puzzle, storageKey, priorStreak, dateLabel, puzzleNavigation, rulesAction }: AppProps) {
   const [guesses, setGuesses] = useState<Guess[]>(() =>
     loadDay(storageKey, puzzle.dateKey)
   );
@@ -41,6 +43,7 @@ export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, r
     : guesses.length >= MAX_GUESSES
       ? 'lost'
       : 'playing';
+  const streak = priorStreak && streakForResult(priorStreak, status);
 
   useEffect(() => {
     saveDay(storageKey, puzzle.dateKey, guesses);
@@ -85,6 +88,9 @@ export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, r
           {' · Read the curve, guess the function'}
         </p>
         {puzzleNavigation}
+        {status === 'playing' && streak && streak.current > 0 && (
+          <p className="streak">Solve today to reach {streak.current + 1} days.</p>
+        )}
       </header>
 
       <Graph
@@ -105,6 +111,9 @@ export default function App({ puzzle, storageKey, dateLabel, puzzleNavigation, r
               ? `Solved in ${guesses.length}.`
               : 'Out of guesses.'}
           </p>
+          {streak && (
+            <p className="streak">{streak.current}-day streak · Best {streak.best}</p>
+          )}
           <p className="outcome__answer">
             <TeX source={latexCurve(puzzle.answer)} />
           </p>

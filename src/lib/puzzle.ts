@@ -114,7 +114,7 @@ export function dateKey(when: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
-function daysBetween(fromKey: string, toKey: string): number {
+export function daysBetween(fromKey: string, toKey: string): number {
   // Parsed as UTC midnight on both sides, so DST cannot shift the difference.
   const from = Date.parse(fromKey + 'T00:00:00Z');
   const to = Date.parse(toKey + 'T00:00:00Z');

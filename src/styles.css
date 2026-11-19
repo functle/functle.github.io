@@ -129,6 +129,13 @@ body {
   font-size: 0.875rem;
 }
 
+.streak {
+  margin: var(--step) 0 0;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---- The plot ---------------------------------------------------------- */
 
 /* Square by construction: the viewBox is square, so aspect-ratio keeps the

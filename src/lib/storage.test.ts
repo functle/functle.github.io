@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { gradeGuess } from './grade';
 import { gameStorageKey, loadDay, saveDay } from './storage';
+import { loadPriorStreak, streakForResult } from './streak';
 import type { Guess } from './types';
 
 const dateKey = '2026-11-12';
@@ -19,6 +20,8 @@ describe('game progress storage', () => {
   beforeEach(() => {
     saved = new Map();
     vi.stubGlobal('localStorage', {
+      get length() { return saved.size; },
+      key: (index: number) => Array.from(saved.keys())[index] ?? null,
       getItem: (key: string) => saved.get(key) ?? null,
       setItem: (key: string, value: string) => { saved.set(key, value); },
     });
@@ -104,5 +107,46 @@ describe('game progress storage', () => {
 
     expect(loadDay(dailyKey, dateKey)).toEqual([]);
     expect(() => saveDay(archiveKey, dateKey, [guess])).not.toThrow();
+  });
+
+  describe('daily solve streaks', () => {
+    function win(date: string, mode: 'daily' | 'archive' = 'daily') {
+      saveDay(gameStorageKey(mode, date), date, [guess]);
+    }
+
+    it('extends consecutive wins across the month and daylight-saving boundary', () => {
+      win('2026-11-01');
+      win('2026-10-30');
+      win('2026-10-31');
+      const prior = loadPriorStreak('2026-11-02');
+      expect(streakForResult(prior, 'playing')).toEqual({ current: 3, best: 3 });
+      expect(streakForResult(prior, 'won')).toEqual({ current: 4, best: 4 });
+      expect(streakForResult(prior, 'lost')).toEqual({ current: 0, best: 3 });
+    });
+
+    it('keeps the best run across a gap and excludes archive wins and incomplete days', () => {
+      win('2026-11-08');
+      win('2026-11-09');
+      win('2026-11-10', 'archive');
+      const wrong = { ...guess, grade: { ...guess.grade, won: false } };
+      saveDay(gameStorageKey('daily', '2026-11-10'), '2026-11-10', [wrong]);
+      expect(loadPriorStreak('2026-11-11')).toEqual({ current: 0, best: 2 });
+      win('2026-11-11');
+      expect(loadPriorStreak(dateKey)).toEqual({ current: 1, best: 2 });
+    });
+
+    it('counts a restored win once and anchors an open puzzle to its own date', () => {
+      win('2026-11-11');
+      win(dateKey);
+      win('2026-11-13');
+      const prior = loadPriorStreak(dateKey);
+      expect(prior).toEqual({ current: 1, best: 1 });
+      expect(streakForResult(prior, 'won')).toEqual({ current: 2, best: 2 });
+    });
+
+    it('allows a first win with unavailable storage', () => {
+      vi.stubGlobal('localStorage', undefined);
+      expect(streakForResult(loadPriorStreak(dateKey), 'won')).toEqual({ current: 1, best: 1 });
+    });
   });
 });
